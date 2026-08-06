@@ -1,0 +1,19 @@
+@use 'variables' as v;
+
+@mixin focus-ring {
+  outline: 3px solid rgba(v.$color-primary, 0.2);
+  outline-offset: 2px;
+}
+
+@mixin card {
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-lg;
+  box-shadow: v.$shadow-card;
+}
+
+@mixin mobile {
+  @media (max-width: 720px) {
+    @content;
+  }
+}

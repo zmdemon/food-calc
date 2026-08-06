@@ -1,0 +1,67 @@
+import type { Product, RationAmounts } from '../types/product'
+
+export const defaultProducts: Product[] = [
+  {
+    id: 'oatmeal',
+    name: 'Овсяные хлопья',
+    protein: 12.3,
+    fat: 6.1,
+    carbs: 59.5,
+    fiber: 8,
+    calories: 352,
+    packagePrice: 134,
+    packageWeight: 500,
+  },
+  {
+    id: 'chicken',
+    name: 'Куриная грудка',
+    protein: 23.6,
+    fat: 1.9,
+    carbs: 0,
+    fiber: 0,
+    calories: 113,
+    packagePrice: 349,
+    packageWeight: 700,
+  },
+  {
+    id: 'buckwheat',
+    name: 'Гречка',
+    protein: 12.6,
+    fat: 3.3,
+    carbs: 57.1,
+    fiber: 11.3,
+    calories: 308,
+    packagePrice: 119,
+    packageWeight: 800,
+  },
+  {
+    id: 'cottage-cheese',
+    name: 'Творог 5%',
+    protein: 17,
+    fat: 5,
+    carbs: 1.8,
+    fiber: 0,
+    calories: 121,
+    packagePrice: 129,
+    packageWeight: 300,
+  },
+  {
+    id: 'apple',
+    name: 'Яблоко',
+    protein: 0.4,
+    fat: 0.4,
+    carbs: 9.8,
+    fiber: 1.8,
+    calories: 47,
+    packagePrice: 159,
+    packageWeight: 1000,
+  },
+]
+
+export const defaultAmounts: RationAmounts = {
+  oatmeal: 80,
+  chicken: 250,
+  buckwheat: 100,
+  'cottage-cheese': 200,
+  apple: 180,
+}
