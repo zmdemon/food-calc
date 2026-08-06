@@ -1,10 +1,12 @@
-import type { NutritionTotals } from '../types/product'
+import type { NutritionTargets, NutritionTotals } from '../types/product'
 import { formatMoney, formatNumber } from '../utils/calculations'
 import { Icon } from './Icon'
 
 type SummaryProps = {
   totals: NutritionTotals
+  targets: NutritionTargets
   daysInMonth: number
+  onOpenTargets: () => void
 }
 
 const nutrientCards = [
@@ -14,7 +16,7 @@ const nutrientCards = [
   { key: 'fiber', label: 'Клетчатка', short: 'Кл', tone: 'fiber' },
 ] as const
 
-export function Summary({ totals, daysInMonth }: SummaryProps) {
+export function Summary({ totals, targets, daysInMonth, onOpenTargets }: SummaryProps) {
   return (
     <section className="summary" aria-label="Сводка рациона">
       <div className="summary__heading">
@@ -22,7 +24,13 @@ export function Summary({ totals, daysInMonth }: SummaryProps) {
           <span className="eyebrow">Сводка рациона</span>
           <h1>Ваш типичный день</h1>
         </div>
-        <div className="summary__period">Расчёт на {daysInMonth} дней</div>
+        <div className="summary__actions">
+          <div className="summary__period">Расчёт на {daysInMonth} дней</div>
+          <button className="button button--ghost summary__targets-button" type="button" onClick={onOpenTargets}>
+            <Icon name="edit" size={15} />
+            Настроить цели
+          </button>
+        </div>
       </div>
 
       <div className="summary__grid">
@@ -51,17 +59,35 @@ export function Summary({ totals, daysInMonth }: SummaryProps) {
         </article>
 
         <article className="macro-card">
-          {nutrientCards.map((item) => (
-            <div className="macro-card__item" key={item.key}>
-              <span className={`macro-card__badge macro-card__badge--${item.tone}`}>
-                {item.short}
-              </span>
-              <div>
-                <span>{item.label}</span>
-                <strong>{formatNumber(totals[item.key], 1)} г</strong>
+          {nutrientCards.map((item) => {
+            const target = targets[item.key]
+            const ratio = target > 0 ? totals[item.key] / target : 0
+            const status = target <= 0 ? 'unset' : ratio >= 1 ? 'reached' : ratio >= 0.8 ? 'near' : 'progress'
+            const percentage = Math.round(ratio * 100)
+
+            return (
+              <div className={`macro-card__item macro-card__item--${status}`} key={item.key}>
+                <span className={`macro-card__badge macro-card__badge--${item.tone}`}>{item.short}</span>
+                <div className="macro-card__content">
+                  <div className="macro-card__label-row">
+                    <span>{item.label}</span>
+                    {target > 0 && <em>{percentage}%</em>}
+                  </div>
+                  <strong>
+                    {formatNumber(totals[item.key], 1)}
+                    {target > 0 && <small> / {formatNumber(target, 1)}</small>} г
+                  </strong>
+                  {target > 0 ? (
+                    <div className="macro-card__progress" aria-label={`${item.label}: ${percentage}% от цели`}>
+                      <i style={{ width: `${Math.min(100, percentage)}%` }} />
+                    </div>
+                  ) : (
+                    <small className="macro-card__unset">Цель не задана</small>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </article>
       </div>
     </section>

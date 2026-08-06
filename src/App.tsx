@@ -5,18 +5,29 @@ import { ImportModal } from './components/ImportModal'
 import { ProductList } from './components/ProductList'
 import { ProductModal } from './components/ProductModal'
 import { Summary } from './components/Summary'
+import { TargetsModal } from './components/TargetsModal'
 import { defaultAmounts, defaultProducts } from './data/defaultProducts'
 import { useLocalStorage } from './hooks/useLocalStorage'
-import type { Product, ProductFormValues, RationAmounts } from './types/product'
+import type { NutritionTargets, Product, ProductFormValues, RationAmounts } from './types/product'
 import { calculateTotals } from './utils/calculations'
 
 const PRODUCTS_KEY = 'food-calc.products.v1'
 const AMOUNTS_KEY = 'food-calc.amounts.v1'
+const TARGETS_KEY = 'food-calc.targets.v1'
+const HIDDEN_PRODUCTS_KEY = 'food-calc.hidden-products.v1'
+
+const defaultTargets: NutritionTargets = {
+  protein: 0,
+  fat: 0,
+  carbs: 0,
+  fiber: 0,
+}
 
 type OverlayState =
   | { type: 'closed' }
   | { type: 'catalog' }
   | { type: 'import' }
+  | { type: 'targets' }
   | { type: 'product'; product: Product | null }
 
 const productWord = (count: number) => {
@@ -31,6 +42,8 @@ const productWord = (count: number) => {
 export function App() {
   const [products, setProducts] = useLocalStorage<Product[]>(PRODUCTS_KEY, defaultProducts)
   const [amounts, setAmounts] = useLocalStorage<RationAmounts>(AMOUNTS_KEY, defaultAmounts)
+  const [targets, setTargets] = useLocalStorage<NutritionTargets>(TARGETS_KEY, defaultTargets)
+  const [hiddenProducts, setHiddenProducts] = useLocalStorage<Record<string, boolean>>(HIDDEN_PRODUCTS_KEY, {})
   const [overlay, setOverlay] = useState<OverlayState>({ type: 'closed' })
   const [catalogNotice, setCatalogNotice] = useState('')
   const daysInMonth = 30
@@ -39,7 +52,11 @@ export function App() {
     () => products.filter((product) => Object.prototype.hasOwnProperty.call(amounts, product.id)),
     [products, amounts],
   )
-  const totals = useMemo(() => calculateTotals(rationProducts, amounts), [rationProducts, amounts])
+  const activeProducts = useMemo(
+    () => rationProducts.filter((product) => !hiddenProducts[product.id]),
+    [rationProducts, hiddenProducts],
+  )
+  const totals = useMemo(() => calculateTotals(activeProducts, amounts), [activeProducts, amounts])
 
   const saveProduct = (values: ProductFormValues) => {
     if (overlay.type === 'product' && overlay.product) {
@@ -61,12 +78,31 @@ export function App() {
 
   const addToRation = (productId: string) => {
     setAmounts((current) => ({ ...current, [productId]: 100 }))
+    setHiddenProducts((current) => {
+      const next = { ...current }
+      delete next[productId]
+      return next
+    })
   }
 
   const removeFromRation = (productId: string) => {
     setAmounts((current) => {
       const next = { ...current }
       delete next[productId]
+      return next
+    })
+    setHiddenProducts((current) => {
+      const next = { ...current }
+      delete next[productId]
+      return next
+    })
+  }
+
+  const toggleProductVisibility = (productId: string) => {
+    setHiddenProducts((current) => {
+      const next = { ...current }
+      if (next[productId]) delete next[productId]
+      else next[productId] = true
       return next
     })
   }
@@ -96,7 +132,12 @@ export function App() {
       </header>
 
       <main id="top" className="container page-content">
-        <Summary totals={totals} daysInMonth={daysInMonth} />
+        <Summary
+          totals={totals}
+          targets={targets}
+          daysInMonth={daysInMonth}
+          onOpenTargets={() => setOverlay({ type: 'targets' })}
+        />
 
         <section className="ration-section">
           <div className="section-heading">
@@ -118,7 +159,9 @@ export function App() {
           <ProductList
             products={rationProducts}
             amounts={amounts}
+            hiddenProductIds={new Set(Object.keys(hiddenProducts).filter((id) => hiddenProducts[id]))}
             onAmountChange={(productId, amount) => setAmounts((current) => ({ ...current, [productId]: amount }))}
+            onToggleVisibility={toggleProductVisibility}
             onEdit={(product) => setOverlay({ type: 'product', product })}
             onRemove={(product) => removeFromRation(product.id)}
             onOpenCatalog={() => setOverlay({ type: 'catalog' })}
@@ -157,6 +200,17 @@ export function App() {
           product={overlay.product}
           onClose={() => setOverlay({ type: 'catalog' })}
           onSave={saveProduct}
+        />
+      )}
+
+      {overlay.type === 'targets' && (
+        <TargetsModal
+          targets={targets}
+          onClose={() => setOverlay({ type: 'closed' })}
+          onSave={(nextTargets) => {
+            setTargets(nextTargets)
+            setOverlay({ type: 'closed' })
+          }}
         />
       )}
     </div>

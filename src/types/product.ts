@@ -22,3 +22,5 @@ export type NutritionTotals = {
   calories: number
   cost: number
 }
+
+export type NutritionTargets = Pick<NutritionTotals, 'protein' | 'fat' | 'carbs' | 'fiber'>

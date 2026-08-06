@@ -6,13 +6,24 @@ import { QuantityControl } from './QuantityControl'
 type ProductListProps = {
   products: Product[]
   amounts: RationAmounts
+  hiddenProductIds: Set<string>
   onAmountChange: (productId: string, amount: number) => void
+  onToggleVisibility: (productId: string) => void
   onEdit: (product: Product) => void
   onRemove: (product: Product) => void
   onOpenCatalog: () => void
 }
 
-export function ProductList({ products, amounts, onAmountChange, onEdit, onRemove, onOpenCatalog }: ProductListProps) {
+export function ProductList({
+  products,
+  amounts,
+  hiddenProductIds,
+  onAmountChange,
+  onToggleVisibility,
+  onEdit,
+  onRemove,
+  onOpenCatalog,
+}: ProductListProps) {
   if (products.length === 0) {
     return (
       <div className="empty-state">
@@ -45,12 +56,15 @@ export function ProductList({ products, amounts, onAmountChange, onEdit, onRemov
           <tbody>
             {products.map((product) => {
               const amount = amounts[product.id] ?? 0
+              const isHidden = hiddenProductIds.has(product.id)
               const factor = amount / 100
               const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
               return (
-                <tr key={product.id}>
+                <tr className={isHidden ? 'product-row--hidden' : ''} key={product.id}>
                   <td>
-                    <strong className="product-name">{product.name}</strong>
+                    <div className="product-title-line">
+                      <strong className="product-name">{product.name}</strong>
+                    </div>
                     <span className="product-package">{formatMoney(product.packagePrice)} · {product.packageWeight} г</span>
                   </td>
                   <td>
@@ -68,6 +82,15 @@ export function ProductList({ products, amounts, onAmountChange, onEdit, onRemov
                   <td><strong>{formatMoney(cost)}</strong></td>
                   <td>
                     <div className="row-actions">
+                      <button
+                        className="row-actions__visibility"
+                        type="button"
+                        onClick={() => onToggleVisibility(product.id)}
+                        aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
+                        aria-pressed={isHidden}
+                      >
+                        <Icon name={isHidden ? 'eye-off' : 'eye'} size={17} />
+                      </button>
                       <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
                         <Icon name="edit" size={17} />
                       </button>
@@ -86,16 +109,29 @@ export function ProductList({ products, amounts, onAmountChange, onEdit, onRemov
       <div className="product-cards">
         {products.map((product) => {
           const amount = amounts[product.id] ?? 0
+          const isHidden = hiddenProductIds.has(product.id)
           const factor = amount / 100
           const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
           return (
-            <article className="product-card" key={product.id}>
+            <article className={`product-card ${isHidden ? 'product-card--hidden' : ''}`} key={product.id}>
               <div className="product-card__head">
                 <div>
-                  <strong>{product.name}</strong>
+                  <div className="product-title-line">
+                    <strong>{product.name}</strong>
+                    {isHidden && <span className="product-paused">Не учитывается</span>}
+                  </div>
                   <span>{formatMoney(product.packagePrice)} за {product.packageWeight} г</span>
                 </div>
                 <div className="row-actions">
+                  <button
+                    className="row-actions__visibility"
+                    type="button"
+                    onClick={() => onToggleVisibility(product.id)}
+                    aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
+                    aria-pressed={isHidden}
+                  >
+                    <Icon name={isHidden ? 'eye-off' : 'eye'} size={17} />
+                  </button>
                   <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
                     <Icon name="edit" size={17} />
                   </button>
