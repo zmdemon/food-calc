@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { CatalogModal } from './components/CatalogModal'
+import { ExportModal } from './components/ExportModal'
 import { Icon } from './components/Icon'
 import { ImportModal } from './components/ImportModal'
 import { ProductList } from './components/ProductList'
@@ -10,6 +11,7 @@ import { defaultAmounts, defaultProducts } from './data/defaultProducts'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import type { NutritionTargets, Product, ProductFormValues, RationAmounts } from './types/product'
 import { calculateTotals } from './utils/calculations'
+import { createRationReport } from './utils/createRationReport'
 
 const PRODUCTS_KEY = 'food-calc.products.v1'
 const AMOUNTS_KEY = 'food-calc.amounts.v1'
@@ -28,6 +30,7 @@ type OverlayState =
   | { type: 'catalog' }
   | { type: 'import' }
   | { type: 'targets' }
+  | { type: 'export' }
   | { type: 'product'; product: Product | null }
 
 const productWord = (count: number) => {
@@ -137,6 +140,7 @@ export function App() {
           targets={targets}
           daysInMonth={daysInMonth}
           onOpenTargets={() => setOverlay({ type: 'targets' })}
+          onOpenExport={() => setOverlay({ type: 'export' })}
         />
 
         <section className="ration-section">
@@ -211,6 +215,13 @@ export function App() {
             setTargets(nextTargets)
             setOverlay({ type: 'closed' })
           }}
+        />
+      )}
+
+      {overlay.type === 'export' && (
+        <ExportModal
+          report={createRationReport({ products: activeProducts, amounts, totals, targets })}
+          onClose={() => setOverlay({ type: 'closed' })}
         />
       )}
     </div>

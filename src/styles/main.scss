@@ -138,7 +138,12 @@
     gap: 9px;
   }
 
-  &__targets-button {
+  &__buttons {
+    display: flex;
+    gap: 7px;
+  }
+
+  &__small-button {
     min-height: 36px;
     padding-inline: 13px;
     font-size: 11px;
@@ -772,6 +777,35 @@
   font-weight: 650;
 }
 
+.export-modal {
+  width: min(100%, 720px);
+}
+
+.export-field {
+  display: block;
+
+  textarea {
+    width: 100%;
+    min-height: 390px;
+    display: block;
+    resize: vertical;
+    padding: 15px;
+    color: v.$color-text;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-sm;
+    outline: 0;
+    background: v.$color-surface-soft;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.55;
+
+    &:focus {
+      border-color: rgba(v.$color-primary, 0.6);
+      box-shadow: 0 0 0 3px rgba(v.$color-primary, 0.09);
+    }
+  }
+}
+
 .catalog-search {
   height: 42px;
   display: flex;
@@ -1067,8 +1101,14 @@
 
     &__actions {
       width: 100%;
-      justify-content: space-between;
+      align-items: stretch;
+      flex-direction: column;
       margin-top: 15px;
+    }
+
+    &__buttons {
+      display: grid;
+      grid-template-columns: 0.75fr 1.25fr;
     }
 
     &__period {
@@ -1239,6 +1279,10 @@
 
   .import-field textarea {
     min-height: 250px;
+  }
+
+  .export-field textarea {
+    min-height: 360px;
   }
 
   .catalog-item {
