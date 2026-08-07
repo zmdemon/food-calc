@@ -400,7 +400,9 @@
 
   th:last-child,
   td:last-child {
+    width: 1%;
     padding-right: 18px;
+    white-space: nowrap;
   }
 
   td {
@@ -610,7 +612,7 @@
 
 .row-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 4px;
 
   button {
@@ -640,6 +642,40 @@
       color: v.$color-primary;
       background: v.$color-primary-soft;
     }
+  }
+}
+
+.product-table__actions-heading {
+  text-align: left !important;
+}
+
+.product-table .row-actions {
+  width: max-content;
+  margin-left: auto;
+}
+
+.table-visibility-toggle {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: v.$color-muted;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  cursor: pointer;
+  transition: color v.$transition, background v.$transition, box-shadow v.$transition;
+
+  &:hover {
+    color: v.$color-primary;
+    background: v.$color-primary-soft;
+  }
+
+  &:focus-visible {
+    color: v.$color-primary;
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(v.$color-primary, 0.17);
   }
 }
 

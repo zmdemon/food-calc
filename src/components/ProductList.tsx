@@ -26,6 +26,7 @@ type ProductListProps = {
   items: RationItem[]
   onAmountChange: (entryId: string, amount: number) => void
   onToggleVisibility: (entryId: string) => void
+  onSetAllVisibility: (enabled: boolean) => void
   onEdit: (product: Product) => void
   onRemove: (entryId: string) => void
   onReorder: (entryIds: string[]) => void
@@ -136,6 +137,7 @@ export function ProductList({
   items,
   onAmountChange,
   onToggleVisibility,
+  onSetAllVisibility,
   onEdit,
   onRemove,
   onReorder,
@@ -162,6 +164,7 @@ export function ProductList({
 
     onReorder(arrayMove(items, oldIndex, newIndex).map(({ entry }) => entry.id))
   }
+  const areAllProductsVisible = items.every(({ entry }) => entry.enabled)
 
   if (items.length === 0) {
     return (
@@ -195,7 +198,18 @@ export function ProductList({
                 <th>Клетчатка</th>
                 <th>Ккал</th>
                 <th>Стоимость</th>
-                <th><span className="sr-only">Действия</span></th>
+                <th className="product-table__actions-heading">
+                  <button
+                    className="table-visibility-toggle"
+                    type="button"
+                    onClick={() => onSetAllVisibility(!areAllProductsVisible)}
+                    aria-label={areAllProductsVisible ? 'Скрыть все продукты из расчёта' : 'Показать все продукты в расчёте'}
+                    title={areAllProductsVisible ? 'Скрыть все' : 'Показать все'}
+                  >
+                    <Icon name={areAllProductsVisible ? 'eye' : 'eye-off'} size={17} />
+                  </button>
+                  <span className="sr-only">Действия</span>
+                </th>
               </tr>
             </thead>
             <SortableContext items={items.map(({ entry }) => entry.id)} strategy={verticalListSortingStrategy}>

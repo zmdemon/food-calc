@@ -158,6 +158,10 @@ export function App() {
     )))
   }
 
+  const setAllProductsVisibility = (enabled: boolean) => {
+    setRationEntries((current) => current.map((entry) => ({ ...entry, enabled })))
+  }
+
   const reorderRation = (entryIds: string[]) => {
     setRationEntries((current) => {
       const entriesById = new Map(current.map((entry) => [entry.id, entry]))
@@ -209,7 +213,7 @@ export function App() {
             <div>
               <span className="eyebrow">Состав</span>
               <h2>Продукты на день</h2>
-              <p>Простая версия без наворотов</p>
+              <p>Упрощенная версия</p>
             </div>
             <div className="section-heading__actions">
               <div className="section-heading__count">
@@ -225,6 +229,7 @@ export function App() {
             items={rationItems}
             onAmountChange={updateRationAmount}
             onToggleVisibility={toggleProductVisibility}
+            onSetAllVisibility={setAllProductsVisibility}
             onEdit={(product) => setOverlay({ type: 'product', product })}
             onRemove={removeFromRation}
             onReorder={reorderRation}
