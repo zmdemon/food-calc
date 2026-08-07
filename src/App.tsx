@@ -11,12 +11,14 @@ import { defaultAmounts, defaultProducts } from './data/defaultProducts'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import type { NutritionTargets, Product, ProductFormValues, RationAmounts } from './types/product'
 import { calculateTotals } from './utils/calculations'
+import { createBackupJson, downloadBackup } from './utils/createBackup'
 import { createRationReport } from './utils/createRationReport'
 
 const PRODUCTS_KEY = 'food-calc.products.v1'
 const AMOUNTS_KEY = 'food-calc.amounts.v1'
 const TARGETS_KEY = 'food-calc.targets.v1'
 const HIDDEN_PRODUCTS_KEY = 'food-calc.hidden-products.v1'
+const RATION_ORDER_KEY = 'food-calc.ration-order.v1'
 
 const defaultTargets: NutritionTargets = {
   protein: 0,
@@ -47,14 +49,28 @@ export function App() {
   const [amounts, setAmounts] = useLocalStorage<RationAmounts>(AMOUNTS_KEY, defaultAmounts)
   const [targets, setTargets] = useLocalStorage<NutritionTargets>(TARGETS_KEY, defaultTargets)
   const [hiddenProducts, setHiddenProducts] = useLocalStorage<Record<string, boolean>>(HIDDEN_PRODUCTS_KEY, {})
+  const [rationOrder, setRationOrder] = useLocalStorage<string[]>(RATION_ORDER_KEY, [])
   const [overlay, setOverlay] = useState<OverlayState>({ type: 'closed' })
   const [catalogNotice, setCatalogNotice] = useState('')
   const daysInMonth = 30
 
-  const rationProducts = useMemo(
-    () => products.filter((product) => Object.prototype.hasOwnProperty.call(amounts, product.id)),
-    [products, amounts],
-  )
+  const rationProducts = useMemo(() => {
+    const remainingProducts = new Map(
+      products
+        .filter((product) => Object.prototype.hasOwnProperty.call(amounts, product.id))
+        .map((product) => [product.id, product]),
+    )
+    const orderedProducts: Product[] = []
+
+    rationOrder.forEach((productId) => {
+      const product = remainingProducts.get(productId)
+      if (!product) return
+      orderedProducts.push(product)
+      remainingProducts.delete(productId)
+    })
+
+    return [...orderedProducts, ...remainingProducts.values()]
+  }, [products, amounts, rationOrder])
   const activeProducts = useMemo(
     () => rationProducts.filter((product) => !hiddenProducts[product.id]),
     [rationProducts, hiddenProducts],
@@ -79,7 +95,23 @@ export function App() {
     setOverlay({ type: 'catalog' })
   }
 
+  const exportBackup = () => {
+    const backup = createBackupJson({
+      products,
+      amounts,
+      hiddenProducts,
+      targets,
+      daysInMonth,
+      rationOrder: rationProducts.map((product) => product.id),
+    })
+    downloadBackup(backup)
+    setCatalogNotice('Резервная копия скачана')
+  }
+
   const addToRation = (productId: string) => {
+    if (!Object.prototype.hasOwnProperty.call(amounts, productId)) {
+      setRationOrder([...rationProducts.map((product) => product.id), productId])
+    }
     setAmounts((current) => ({ ...current, [productId]: 100 }))
     setHiddenProducts((current) => {
       const next = { ...current }
@@ -89,6 +121,7 @@ export function App() {
   }
 
   const removeFromRation = (productId: string) => {
+    setRationOrder(rationProducts.filter((product) => product.id !== productId).map((product) => product.id))
     setAmounts((current) => {
       const next = { ...current }
       delete next[productId]
@@ -148,7 +181,7 @@ export function App() {
             <div>
               <span className="eyebrow">Состав</span>
               <h2>Продукты на день</h2>
-              <p>Укажите привычное количество — расчёты обновятся автоматически.</p>
+              <p>Простая версия без наворотов</p>
             </div>
             <div className="section-heading__actions">
               <div className="section-heading__count">
@@ -168,6 +201,7 @@ export function App() {
             onToggleVisibility={toggleProductVisibility}
             onEdit={(product) => setOverlay({ type: 'product', product })}
             onRemove={(product) => removeFromRation(product.id)}
+            onReorder={setRationOrder}
             onOpenCatalog={() => setOverlay({ type: 'catalog' })}
           />
         </section>
@@ -186,6 +220,7 @@ export function App() {
           onAddToRation={addToRation}
           onCreate={() => setOverlay({ type: 'product', product: null })}
           onImport={() => setOverlay({ type: 'import' })}
+          onExport={exportBackup}
           onEdit={(product) => setOverlay({ type: 'product', product })}
           onDelete={deleteFromCatalog}
           onClose={() => setOverlay({ type: 'closed' })}

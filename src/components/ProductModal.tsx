@@ -36,14 +36,18 @@ const createDraft = (product: Product | null): ProductFormDraft => {
   if (!product) return initialValues
 
   return numberFields.reduce<ProductFormDraft>(
-    (draft, field) => ({ ...draft, [field]: String(product[field]) }),
+    (draft, field) => ({ ...draft, [field]: String(product[field]).replace('.', ',') }),
     { ...initialValues, name: product.name },
   )
 }
 
+const normalizeDecimalInput = (value: string) => value.replaceAll('.', ',')
+
+const isDecimalDraft = (value: string) => /^\d*(?:,\d*)?$/.test(value)
+
 const parseOptionalNumber = (value: string) => {
   if (value.trim() === '') return 0
-  const parsed = Number(value)
+  const parsed = Number(value.replace(',', '.'))
   return Number.isFinite(parsed) ? Math.max(0, parsed) : 0
 }
 
@@ -61,12 +65,14 @@ function NumberInput({ label, field, value, suffix, onChange }: {
       <div className="form-field__input">
         <input
           id={id}
-          type="number"
-          min="0"
-          step="0.1"
+          type="text"
+          inputMode="decimal"
           value={value}
           placeholder="0"
-          onChange={(event) => onChange(field, event.target.value)}
+          onChange={(event) => {
+            const normalizedValue = normalizeDecimalInput(event.target.value)
+            if (isDecimalDraft(normalizedValue)) onChange(field, normalizedValue)
+          }}
         />
         <i>{suffix}</i>
       </div>

@@ -10,6 +10,7 @@ type CatalogModalProps = {
   onAddToRation: (productId: string) => void
   onCreate: () => void
   onImport: () => void
+  onExport: () => void
   onEdit: (product: Product) => void
   onDelete: (product: Product) => void
   onClose: () => void
@@ -22,6 +23,7 @@ export function CatalogModal({
   onAddToRation,
   onCreate,
   onImport,
+  onExport,
   onEdit,
   onDelete,
   onClose,
@@ -72,6 +74,9 @@ export function CatalogModal({
           </label>
           <button className="button button--ghost" type="button" onClick={onImport}>
             Импорт JSON
+          </button>
+          <button className="button button--ghost" type="button" onClick={onExport}>
+            Экспорт данных
           </button>
           <button className="button button--primary" type="button" onClick={onCreate}>
             <Icon name="plus" size={17} />

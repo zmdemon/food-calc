@@ -1,3 +1,22 @@
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Product, RationAmounts } from '../types/product'
 import { formatMoney, formatNumber } from '../utils/calculations'
 import { Icon } from './Icon'
@@ -11,7 +30,106 @@ type ProductListProps = {
   onToggleVisibility: (productId: string) => void
   onEdit: (product: Product) => void
   onRemove: (product: Product) => void
+  onReorder: (productIds: string[]) => void
   onOpenCatalog: () => void
+}
+
+type SortableProductRowProps = {
+  product: Product
+  amount: number
+  isHidden: boolean
+  onAmountChange: (productId: string, amount: number) => void
+  onToggleVisibility: (productId: string) => void
+  onEdit: (product: Product) => void
+  onRemove: (product: Product) => void
+}
+
+function SortableProductRow({
+  product,
+  amount,
+  isHidden,
+  onAmountChange,
+  onToggleVisibility,
+  onEdit,
+  onRemove,
+}: SortableProductRowProps) {
+  const {
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.id })
+  const factor = amount / 100
+  const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
+  const className = [
+    isHidden ? 'product-row--hidden' : '',
+    isDragging ? 'product-row--dragging' : '',
+  ].filter(Boolean).join(' ')
+
+  return (
+    <tr
+      ref={setNodeRef}
+      className={className}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+    >
+      <td>
+        <div className="product-table-product">
+          <button
+            ref={setActivatorNodeRef}
+            className="product-drag-handle"
+            type="button"
+            {...attributes}
+            {...listeners}
+            aria-label={`Изменить порядок продукта «${product.name}»`}
+          >
+            <Icon name="grip-vertical" size={20} />
+          </button>
+          <div>
+            <strong className="product-name">{product.name}</strong>
+            <span className="product-package">{formatMoney(product.packagePrice)} · {product.packageWeight} г</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(product.id, value)} />
+      </td>
+      <td>
+        <span className="macro-line">
+          <b className="macro-line__protein">{formatNumber(product.protein * factor, 1)}</b><i>/</i>
+          <b className="macro-line__fat">{formatNumber(product.fat * factor, 1)}</b><i>/</i>
+          <b className="macro-line__carbs">{formatNumber(product.carbs * factor, 1)}</b>
+        </span>
+      </td>
+      <td>{formatNumber(product.fiber * factor, 1)} г</td>
+      <td>{formatNumber(product.calories * factor)}</td>
+      <td><strong>{formatMoney(cost)}</strong></td>
+      <td>
+        <div className="row-actions">
+          <button
+            className="row-actions__visibility"
+            type="button"
+            onClick={() => onToggleVisibility(product.id)}
+            aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
+            aria-pressed={isHidden}
+          >
+            <Icon name={isHidden ? 'eye-off' : 'eye'} size={17} />
+          </button>
+          <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
+            <Icon name="edit" size={17} />
+          </button>
+          <button className="row-actions__danger" type="button" onClick={() => onRemove(product)} aria-label={`Убрать ${product.name} из рациона`}>
+            <Icon name="close" size={17} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
 }
 
 export function ProductList({
@@ -22,8 +140,31 @@ export function ProductList({
   onToggleVisibility,
   onEdit,
   onRemove,
+  onReorder,
   onOpenCatalog,
 }: ProductListProps) {
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+
+    const oldIndex = products.findIndex((product) => product.id === active.id)
+    const newIndex = products.findIndex((product) => product.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    onReorder(arrayMove(products, oldIndex, newIndex).map((product) => product.id))
+  }
+
   if (products.length === 0) {
     return (
       <div className="empty-state">
@@ -40,71 +181,44 @@ export function ProductList({
 
   return (
     <div className="product-list">
-      <div className="product-table-wrap">
-        <table className="product-table">
-          <thead>
-            <tr>
-              <th>Продукт</th>
-              <th>Количество</th>
-              <th>Б / Ж / У</th>
-              <th>Клетчатка</th>
-              <th>Ккал</th>
-              <th>Стоимость</th>
-              <th><span className="sr-only">Действия</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => {
-              const amount = amounts[product.id] ?? 0
-              const isHidden = hiddenProductIds.has(product.id)
-              const factor = amount / 100
-              const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
-              return (
-                <tr className={isHidden ? 'product-row--hidden' : ''} key={product.id}>
-                  <td>
-                    <div className="product-title-line">
-                      <strong className="product-name">{product.name}</strong>
-                    </div>
-                    <span className="product-package">{formatMoney(product.packagePrice)} · {product.packageWeight} г</span>
-                  </td>
-                  <td>
-                    <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(product.id, value)} />
-                  </td>
-                  <td>
-                    <span className="macro-line">
-                      <b className="macro-line__protein">{formatNumber(product.protein * factor, 1)}</b><i>/</i>
-                      <b className="macro-line__fat">{formatNumber(product.fat * factor, 1)}</b><i>/</i>
-                      <b className="macro-line__carbs">{formatNumber(product.carbs * factor, 1)}</b>
-                    </span>
-                  </td>
-                  <td>{formatNumber(product.fiber * factor, 1)} г</td>
-                  <td>{formatNumber(product.calories * factor)}</td>
-                  <td><strong>{formatMoney(cost)}</strong></td>
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        className="row-actions__visibility"
-                        type="button"
-                        onClick={() => onToggleVisibility(product.id)}
-                        aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
-                        aria-pressed={isHidden}
-                      >
-                        <Icon name={isHidden ? 'eye-off' : 'eye'} size={17} />
-                      </button>
-                      <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
-                        <Icon name="edit" size={17} />
-                      </button>
-                      <button className="row-actions__danger" type="button" onClick={() => onRemove(product)} aria-label={`Убрать ${product.name} из рациона`}>
-                        <Icon name="close" size={17} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis]}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="product-table-wrap">
+          <table className="product-table">
+            <thead>
+              <tr>
+                <th>Продукт</th>
+                <th>Количество</th>
+                <th>Б / Ж / У</th>
+                <th>Клетчатка</th>
+                <th>Ккал</th>
+                <th>Стоимость</th>
+                <th><span className="sr-only">Действия</span></th>
+              </tr>
+            </thead>
+            <SortableContext items={products.map((product) => product.id)} strategy={verticalListSortingStrategy}>
+              <tbody>
+                {products.map((product) => (
+                  <SortableProductRow
+                    key={product.id}
+                    product={product}
+                    amount={amounts[product.id] ?? 0}
+                    isHidden={hiddenProductIds.has(product.id)}
+                    onAmountChange={onAmountChange}
+                    onToggleVisibility={onToggleVisibility}
+                    onEdit={onEdit}
+                    onRemove={onRemove}
+                  />
+                ))}
+              </tbody>
+            </SortableContext>
+          </table>
+        </div>
+      </DndContext>
 
       <div className="product-cards">
         {products.map((product) => {
