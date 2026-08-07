@@ -60,8 +60,8 @@ export function TargetsModal({ targets, onClose, onSave }: TargetsModalProps) {
       <section className="modal targets-modal" role="dialog" aria-modal="true" aria-labelledby="targets-title">
         <div className="modal__head">
           <div>
-            <span className="eyebrow">Дневные ориентиры</span>
-            <h2 id="targets-title">Настроить цели</h2>
+            <span className="eyebrow">Дневные целевые показатели</span>
+            <h2 id="targets-title">Настроить лимиты</h2>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Закрыть настройки целей">
             <Icon name="close" size={21} />
@@ -69,7 +69,7 @@ export function TargetsModal({ targets, onClose, onSave }: TargetsModalProps) {
         </div>
 
         <p className="targets-modal__intro">
-          Укажите желаемое количество на день. Пустое значение отключает цель.
+          Укажите лимиты на день. Пустое значение отключает цель.
         </p>
 
         <form onSubmit={handleSubmit}>

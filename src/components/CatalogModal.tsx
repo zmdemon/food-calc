@@ -54,7 +54,7 @@ export function CatalogModal({
         <div className="modal__head catalog-modal__head">
           <div>
             <span className="eyebrow">Ваши продукты</span>
-            <h2 id="catalog-title">Каталог продуктов</h2>
+            <h2 id="catalog-title">База продуктов</h2>
             <p>Добавляйте продукты в типичный день или управляйте каталогом.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Закрыть каталог">

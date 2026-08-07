@@ -188,13 +188,13 @@ export function App() {
           <a className="brand" href="#top" aria-label="Рацион — на главную">
             <span className="brand__mark"><Icon name="leaf" size={21} /></span>
             <span>
-              <strong>Рацион</strong>
-              <small>калькулятор питания</small>
+              <strong>Еда считать</strong>
+              <small>калькулятор еда</small>
             </span>
           </a>
           <button className="button button--primary button--catalog" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
             <Icon name="leaf" size={18} />
-            <span>Каталог продуктов</span>
+            <span>База продуктов</span>
           </button>
         </div>
       </header>
@@ -221,7 +221,7 @@ export function App() {
               </div>
               <button className="button button--primary" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
                 <Icon name="plus" size={17} />
-                <span>Добавить из каталога</span>
+                <span>Добавить из базы</span>
               </button>
             </div>
           </div>
