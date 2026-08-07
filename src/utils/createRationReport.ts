@@ -1,9 +1,8 @@
-import type { NutritionTargets, NutritionTotals, Product, RationAmounts } from '../types/product'
+import type { NutritionTargets, NutritionTotals, RationItem } from '../types/product'
 import { formatNumber } from './calculations'
 
 type CreateRationReportParams = {
-  products: Product[]
-  amounts: RationAmounts
+  items: RationItem[]
   totals: NutritionTotals
   targets: NutritionTargets
 }
@@ -12,7 +11,7 @@ const grams = (value: number) => `${formatNumber(value, 1)} г`
 const targetValue = (value: number) => value > 0 ? grams(value) : '—'
 const escapeCell = (value: string) => value.replaceAll('|', '\\|').replaceAll(/\r?\n/g, ' ')
 
-export function createRationReport({ products, amounts, totals, targets }: CreateRationReportParams) {
+export function createRationReport({ items, totals, targets }: CreateRationReportParams) {
   const lines = [
     '# Типичный дневной рацион',
     '',
@@ -32,8 +31,8 @@ export function createRationReport({ products, amounts, totals, targets }: Creat
     '|---|---:|---:|---:|---:|---:|---:|',
   ]
 
-  products.forEach((product) => {
-    const amount = amounts[product.id] ?? 0
+  items.forEach(({ entry, product }) => {
+    const amount = entry.amount
     const factor = amount / 100
     lines.push(
       `| ${escapeCell(product.name)} | ${formatNumber(amount)} г | ${formatNumber(product.calories * factor)} | ${grams(product.protein * factor)} | ${grams(product.fat * factor)} | ${grams(product.carbs * factor)} | ${grams(product.fiber * factor)} |`,

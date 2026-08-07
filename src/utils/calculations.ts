@@ -1,4 +1,4 @@
-import type { NutritionTotals, Product, RationAmounts } from '../types/product'
+import type { NutritionTotals, RationItem } from '../types/product'
 
 export const EMPTY_TOTALS: NutritionTotals = {
   protein: 0,
@@ -9,9 +9,9 @@ export const EMPTY_TOTALS: NutritionTotals = {
   cost: 0,
 }
 
-export function calculateTotals(products: Product[], amounts: RationAmounts): NutritionTotals {
-  return products.reduce((totals, product) => {
-    const amount = amounts[product.id] ?? 0
+export function calculateTotals(items: RationItem[]): NutritionTotals {
+  return items.reduce((totals, { entry, product }) => {
+    const amount = entry.amount
     const factor = amount / 100
     const pricePerGram = product.packageWeight > 0 ? product.packagePrice / product.packageWeight : 0
 

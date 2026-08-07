@@ -962,16 +962,23 @@
   font-weight: 750;
   cursor: pointer;
 
-  &:hover:not(:disabled) {
+  &:hover {
     color: white;
     background: v.$color-primary;
   }
+}
 
-  &--added {
+.catalog-ration-control {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 4px;
+
+  > span {
     color: v.$color-muted;
-    border-color: v.$color-border;
-    background: v.$color-surface-soft;
-    cursor: default;
+    font-size: 9px;
+    font-weight: 700;
   }
 }
 
@@ -1356,7 +1363,12 @@
   }
 
   .catalog-add {
+    width: 100%;
+  }
+
+  .catalog-ration-control {
     flex: 1;
+    align-items: stretch;
   }
 
   .form-grid--nutrition {

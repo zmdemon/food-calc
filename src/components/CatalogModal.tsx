@@ -5,7 +5,7 @@ import { Icon } from './Icon'
 
 type CatalogModalProps = {
   products: Product[]
-  rationProductIds: Set<string>
+  rationProductCounts: Map<string, number>
   notice?: string
   onAddToRation: (productId: string) => void
   onCreate: () => void
@@ -18,7 +18,7 @@ type CatalogModalProps = {
 
 export function CatalogModal({
   products,
-  rationProductIds,
+  rationProductCounts,
   notice,
   onAddToRation,
   onCreate,
@@ -88,7 +88,7 @@ export function CatalogModal({
 
         <div className="catalog-list">
           {filteredProducts.map((product) => {
-            const isInRation = rationProductIds.has(product.id)
+            const rationCount = rationProductCounts.get(product.id) ?? 0
             return (
               <article className="catalog-item" key={product.id}>
                 <div className="catalog-item__main">
@@ -99,14 +99,18 @@ export function CatalogModal({
                   <small>{formatMoney(product.packagePrice)} за {product.packageWeight} г</small>
                 </div>
                 <div className="catalog-item__actions">
-                  <button
-                    className={`catalog-add ${isInRation ? 'catalog-add--added' : ''}`}
-                    type="button"
-                    disabled={isInRation}
-                    onClick={() => onAddToRation(product.id)}
-                  >
-                    {isInRation ? 'В рационе' : <><Icon name="plus" size={15} /> В рацион</>}
-                  </button>
+                  <div className="catalog-ration-control">
+                    {rationCount > 0 && <span>В рационе: {rationCount}</span>}
+                    <button
+                      className="catalog-add"
+                      type="button"
+                      onClick={() => onAddToRation(product.id)}
+                      aria-label={rationCount > 0 ? `Добавить ещё один ${product.name} в рацион` : `Добавить ${product.name} в рацион`}
+                    >
+                      <Icon name="plus" size={15} />
+                      {rationCount > 0 ? 'Добавить ещё' : 'В рацион'}
+                    </button>
+                  </div>
                   <div className="row-actions">
                     <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
                       <Icon name="edit" size={17} />

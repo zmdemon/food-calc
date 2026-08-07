@@ -17,34 +17,34 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { Product, RationAmounts } from '../types/product'
+import type { Product, RationItem } from '../types/product'
 import { formatMoney, formatNumber } from '../utils/calculations'
 import { Icon } from './Icon'
 import { QuantityControl } from './QuantityControl'
 
 type ProductListProps = {
-  products: Product[]
-  amounts: RationAmounts
-  hiddenProductIds: Set<string>
-  onAmountChange: (productId: string, amount: number) => void
-  onToggleVisibility: (productId: string) => void
+  items: RationItem[]
+  onAmountChange: (entryId: string, amount: number) => void
+  onToggleVisibility: (entryId: string) => void
   onEdit: (product: Product) => void
-  onRemove: (product: Product) => void
-  onReorder: (productIds: string[]) => void
+  onRemove: (entryId: string) => void
+  onReorder: (entryIds: string[]) => void
   onOpenCatalog: () => void
 }
 
 type SortableProductRowProps = {
+  entryId: string
   product: Product
   amount: number
   isHidden: boolean
-  onAmountChange: (productId: string, amount: number) => void
-  onToggleVisibility: (productId: string) => void
+  onAmountChange: (entryId: string, amount: number) => void
+  onToggleVisibility: (entryId: string) => void
   onEdit: (product: Product) => void
-  onRemove: (product: Product) => void
+  onRemove: (entryId: string) => void
 }
 
 function SortableProductRow({
+  entryId,
   product,
   amount,
   isHidden,
@@ -61,7 +61,7 @@ function SortableProductRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: product.id })
+  } = useSortable({ id: entryId })
   const factor = amount / 100
   const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
   const className = [
@@ -97,7 +97,7 @@ function SortableProductRow({
         </div>
       </td>
       <td>
-        <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(product.id, value)} />
+        <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(entryId, value)} />
       </td>
       <td>
         <span className="macro-line">
@@ -114,7 +114,7 @@ function SortableProductRow({
           <button
             className="row-actions__visibility"
             type="button"
-            onClick={() => onToggleVisibility(product.id)}
+            onClick={() => onToggleVisibility(entryId)}
             aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
             aria-pressed={isHidden}
           >
@@ -123,7 +123,7 @@ function SortableProductRow({
           <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
             <Icon name="edit" size={17} />
           </button>
-          <button className="row-actions__danger" type="button" onClick={() => onRemove(product)} aria-label={`Убрать ${product.name} из рациона`}>
+          <button className="row-actions__danger" type="button" onClick={() => onRemove(entryId)} aria-label={`Убрать ${product.name} из рациона`}>
             <Icon name="close" size={17} />
           </button>
         </div>
@@ -133,9 +133,7 @@ function SortableProductRow({
 }
 
 export function ProductList({
-  products,
-  amounts,
-  hiddenProductIds,
+  items,
   onAmountChange,
   onToggleVisibility,
   onEdit,
@@ -158,14 +156,14 @@ export function ProductList({
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return
 
-    const oldIndex = products.findIndex((product) => product.id === active.id)
-    const newIndex = products.findIndex((product) => product.id === over.id)
+    const oldIndex = items.findIndex(({ entry }) => entry.id === active.id)
+    const newIndex = items.findIndex(({ entry }) => entry.id === over.id)
     if (oldIndex === -1 || newIndex === -1) return
 
-    onReorder(arrayMove(products, oldIndex, newIndex).map((product) => product.id))
+    onReorder(arrayMove(items, oldIndex, newIndex).map(({ entry }) => entry.id))
   }
 
-  if (products.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="empty-state">
         <div className="empty-state__icon"><Icon name="leaf" size={30} /></div>
@@ -200,14 +198,15 @@ export function ProductList({
                 <th><span className="sr-only">Действия</span></th>
               </tr>
             </thead>
-            <SortableContext items={products.map((product) => product.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={items.map(({ entry }) => entry.id)} strategy={verticalListSortingStrategy}>
               <tbody>
-                {products.map((product) => (
+                {items.map(({ entry, product }) => (
                   <SortableProductRow
-                    key={product.id}
+                    key={entry.id}
+                    entryId={entry.id}
                     product={product}
-                    amount={amounts[product.id] ?? 0}
-                    isHidden={hiddenProductIds.has(product.id)}
+                    amount={entry.amount}
+                    isHidden={!entry.enabled}
                     onAmountChange={onAmountChange}
                     onToggleVisibility={onToggleVisibility}
                     onEdit={onEdit}
@@ -221,13 +220,13 @@ export function ProductList({
       </DndContext>
 
       <div className="product-cards">
-        {products.map((product) => {
-          const amount = amounts[product.id] ?? 0
-          const isHidden = hiddenProductIds.has(product.id)
+        {items.map(({ entry, product }) => {
+          const amount = entry.amount
+          const isHidden = !entry.enabled
           const factor = amount / 100
           const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
           return (
-            <article className={`product-card ${isHidden ? 'product-card--hidden' : ''}`} key={product.id}>
+            <article className={`product-card ${isHidden ? 'product-card--hidden' : ''}`} key={entry.id}>
               <div className="product-card__head">
                 <div>
                   <div className="product-title-line">
@@ -240,7 +239,7 @@ export function ProductList({
                   <button
                     className="row-actions__visibility"
                     type="button"
-                    onClick={() => onToggleVisibility(product.id)}
+                    onClick={() => onToggleVisibility(entry.id)}
                     aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
                     aria-pressed={isHidden}
                   >
@@ -249,12 +248,12 @@ export function ProductList({
                   <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
                     <Icon name="edit" size={17} />
                   </button>
-                  <button className="row-actions__danger" type="button" onClick={() => onRemove(product)} aria-label={`Убрать ${product.name} из рациона`}>
+                  <button className="row-actions__danger" type="button" onClick={() => onRemove(entry.id)} aria-label={`Убрать ${product.name} из рациона`}>
                     <Icon name="close" size={17} />
                   </button>
                 </div>
               </div>
-              <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(product.id, value)} />
+              <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(entry.id, value)} />
               <div className="product-card__stats">
                 <div><span>Б / Ж / У</span><strong>{formatNumber(product.protein * factor, 1)} / {formatNumber(product.fat * factor, 1)} / {formatNumber(product.carbs * factor, 1)}</strong></div>
                 <div><span>Клетчатка</span><strong>{formatNumber(product.fiber * factor, 1)} г</strong></div>

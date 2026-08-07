@@ -9,7 +9,7 @@ import { Summary } from './components/Summary'
 import { TargetsModal } from './components/TargetsModal'
 import { defaultAmounts, defaultProducts } from './data/defaultProducts'
 import { useLocalStorage } from './hooks/useLocalStorage'
-import type { NutritionTargets, Product, ProductFormValues, RationAmounts } from './types/product'
+import type { NutritionTargets, Product, ProductFormValues, RationAmounts, RationEntry, RationItem } from './types/product'
 import { calculateTotals } from './utils/calculations'
 import { createBackupJson, downloadBackup } from './utils/createBackup'
 import { createRationReport } from './utils/createRationReport'
@@ -19,6 +19,7 @@ const AMOUNTS_KEY = 'food-calc.amounts.v1'
 const TARGETS_KEY = 'food-calc.targets.v1'
 const HIDDEN_PRODUCTS_KEY = 'food-calc.hidden-products.v1'
 const RATION_ORDER_KEY = 'food-calc.ration-order.v1'
+const RATION_ENTRIES_KEY = 'food-calc.ration-entries.v1'
 
 const defaultTargets: NutritionTargets = {
   protein: 0,
@@ -44,38 +45,64 @@ const productWord = (count: number) => {
   return 'продуктов'
 }
 
+const readLocalStorage = <T,>(key: string, fallback: T): T => {
+  try {
+    const stored = window.localStorage.getItem(key)
+    return stored ? JSON.parse(stored) as T : fallback
+  } catch {
+    return fallback
+  }
+}
+
+const migrateLegacyRation = (products: Product[]): RationEntry[] => {
+  const amounts = readLocalStorage<RationAmounts>(AMOUNTS_KEY, defaultAmounts)
+  const hiddenProducts = readLocalStorage<Record<string, boolean>>(HIDDEN_PRODUCTS_KEY, {})
+  const legacyOrder = readLocalStorage<string[]>(RATION_ORDER_KEY, [])
+  const productIds = new Set(products.map((product) => product.id))
+  const remainingProductIds = new Set(
+    Object.keys(amounts).filter((productId) => productIds.has(productId)),
+  )
+  const orderedProductIds = [
+    ...legacyOrder.filter((productId) => remainingProductIds.delete(productId)),
+    ...remainingProductIds,
+  ]
+
+  return orderedProductIds.map((productId) => ({
+    id: `legacy:${productId}`,
+    productId,
+    amount: Number.isFinite(amounts[productId]) ? Math.max(0, amounts[productId]) : 0,
+    enabled: !hiddenProducts[productId],
+  }))
+}
+
 export function App() {
   const [products, setProducts] = useLocalStorage<Product[]>(PRODUCTS_KEY, defaultProducts)
-  const [amounts, setAmounts] = useLocalStorage<RationAmounts>(AMOUNTS_KEY, defaultAmounts)
   const [targets, setTargets] = useLocalStorage<NutritionTargets>(TARGETS_KEY, defaultTargets)
-  const [hiddenProducts, setHiddenProducts] = useLocalStorage<Record<string, boolean>>(HIDDEN_PRODUCTS_KEY, {})
-  const [rationOrder, setRationOrder] = useLocalStorage<string[]>(RATION_ORDER_KEY, [])
+  const [rationEntries, setRationEntries] = useLocalStorage<RationEntry[]>(
+    RATION_ENTRIES_KEY,
+    () => migrateLegacyRation(products),
+  )
   const [overlay, setOverlay] = useState<OverlayState>({ type: 'closed' })
   const [catalogNotice, setCatalogNotice] = useState('')
   const daysInMonth = 30
 
-  const rationProducts = useMemo(() => {
-    const remainingProducts = new Map(
-      products
-        .filter((product) => Object.prototype.hasOwnProperty.call(amounts, product.id))
-        .map((product) => [product.id, product]),
-    )
-    const orderedProducts: Product[] = []
-
-    rationOrder.forEach((productId) => {
-      const product = remainingProducts.get(productId)
-      if (!product) return
-      orderedProducts.push(product)
-      remainingProducts.delete(productId)
+  const rationItems = useMemo(() => {
+    const productsById = new Map(products.map((product) => [product.id, product]))
+    return rationEntries.flatMap<RationItem>((entry) => {
+      const product = productsById.get(entry.productId)
+      return product ? [{ entry, product }] : []
     })
-
-    return [...orderedProducts, ...remainingProducts.values()]
-  }, [products, amounts, rationOrder])
-  const activeProducts = useMemo(
-    () => rationProducts.filter((product) => !hiddenProducts[product.id]),
-    [rationProducts, hiddenProducts],
+  }, [products, rationEntries])
+  const activeRationItems = useMemo(
+    () => rationItems.filter(({ entry }) => entry.enabled),
+    [rationItems],
   )
-  const totals = useMemo(() => calculateTotals(activeProducts, amounts), [activeProducts, amounts])
+  const rationProductCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    rationEntries.forEach(({ productId }) => counts.set(productId, (counts.get(productId) ?? 0) + 1))
+    return counts
+  }, [rationEntries])
+  const totals = useMemo(() => calculateTotals(activeRationItems), [activeRationItems])
 
   const saveProduct = (values: ProductFormValues) => {
     if (overlay.type === 'product' && overlay.product) {
@@ -98,55 +125,56 @@ export function App() {
   const exportBackup = () => {
     const backup = createBackupJson({
       products,
-      amounts,
-      hiddenProducts,
+      rationEntries,
       targets,
       daysInMonth,
-      rationOrder: rationProducts.map((product) => product.id),
     })
     downloadBackup(backup)
     setCatalogNotice('Резервная копия скачана')
   }
 
   const addToRation = (productId: string) => {
-    if (!Object.prototype.hasOwnProperty.call(amounts, productId)) {
-      setRationOrder([...rationProducts.map((product) => product.id), productId])
-    }
-    setAmounts((current) => ({ ...current, [productId]: 100 }))
-    setHiddenProducts((current) => {
-      const next = { ...current }
-      delete next[productId]
-      return next
-    })
+    setRationEntries((current) => [...current, {
+      id: crypto.randomUUID(),
+      productId,
+      amount: 100,
+      enabled: true,
+    }])
   }
 
-  const removeFromRation = (productId: string) => {
-    setRationOrder(rationProducts.filter((product) => product.id !== productId).map((product) => product.id))
-    setAmounts((current) => {
-      const next = { ...current }
-      delete next[productId]
-      return next
-    })
-    setHiddenProducts((current) => {
-      const next = { ...current }
-      delete next[productId]
-      return next
-    })
+  const removeFromRation = (entryId: string) => {
+    setRationEntries((current) => current.filter((entry) => entry.id !== entryId))
   }
 
-  const toggleProductVisibility = (productId: string) => {
-    setHiddenProducts((current) => {
-      const next = { ...current }
-      if (next[productId]) delete next[productId]
-      else next[productId] = true
-      return next
+  const updateRationAmount = (entryId: string, amount: number) => {
+    setRationEntries((current) => current.map((entry) => (
+      entry.id === entryId ? { ...entry, amount } : entry
+    )))
+  }
+
+  const toggleProductVisibility = (entryId: string) => {
+    setRationEntries((current) => current.map((entry) => (
+      entry.id === entryId ? { ...entry, enabled: !entry.enabled } : entry
+    )))
+  }
+
+  const reorderRation = (entryIds: string[]) => {
+    setRationEntries((current) => {
+      const entriesById = new Map(current.map((entry) => [entry.id, entry]))
+      const orderedEntries = entryIds.flatMap((entryId) => {
+        const entry = entriesById.get(entryId)
+        if (!entry) return []
+        entriesById.delete(entryId)
+        return [entry]
+      })
+      return [...orderedEntries, ...entriesById.values()]
     })
   }
 
   const deleteFromCatalog = (product: Product) => {
-    if (!window.confirm(`Удалить «${product.name}» из каталога? Продукт также исчезнет из дневного рациона.`)) return
+    if (!window.confirm(`Удалить «${product.name}» из каталога? Все его позиции также исчезнут из дневного рациона.`)) return
     setProducts((current) => current.filter((item) => item.id !== product.id))
-    removeFromRation(product.id)
+    setRationEntries((current) => current.filter((entry) => entry.productId !== product.id))
   }
 
   return (
@@ -185,7 +213,7 @@ export function App() {
             </div>
             <div className="section-heading__actions">
               <div className="section-heading__count">
-                {rationProducts.length} {productWord(rationProducts.length)}
+                {rationItems.length} {productWord(rationItems.length)}
               </div>
               <button className="button button--primary" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
                 <Icon name="plus" size={17} />
@@ -194,14 +222,12 @@ export function App() {
             </div>
           </div>
           <ProductList
-            products={rationProducts}
-            amounts={amounts}
-            hiddenProductIds={new Set(Object.keys(hiddenProducts).filter((id) => hiddenProducts[id]))}
-            onAmountChange={(productId, amount) => setAmounts((current) => ({ ...current, [productId]: amount }))}
+            items={rationItems}
+            onAmountChange={updateRationAmount}
             onToggleVisibility={toggleProductVisibility}
             onEdit={(product) => setOverlay({ type: 'product', product })}
-            onRemove={(product) => removeFromRation(product.id)}
-            onReorder={setRationOrder}
+            onRemove={removeFromRation}
+            onReorder={reorderRation}
             onOpenCatalog={() => setOverlay({ type: 'catalog' })}
           />
         </section>
@@ -215,7 +241,7 @@ export function App() {
       {overlay.type === 'catalog' && (
         <CatalogModal
           products={products}
-          rationProductIds={new Set(Object.keys(amounts))}
+          rationProductCounts={rationProductCounts}
           notice={catalogNotice}
           onAddToRation={addToRation}
           onCreate={() => setOverlay({ type: 'product', product: null })}
@@ -255,7 +281,7 @@ export function App() {
 
       {overlay.type === 'export' && (
         <ExportModal
-          report={createRationReport({ products: activeProducts, amounts, totals, targets })}
+          report={createRationReport({ items: activeRationItems, totals, targets })}
           onClose={() => setOverlay({ type: 'closed' })}
         />
       )}

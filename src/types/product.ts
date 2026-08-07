@@ -12,6 +12,18 @@ export type Product = {
 
 export type RationAmounts = Record<string, number>
 
+export type RationEntry = {
+  id: string
+  productId: string
+  amount: number
+  enabled: boolean
+}
+
+export type RationItem = {
+  entry: RationEntry
+  product: Product
+}
+
 export type ProductFormValues = Omit<Product, 'id'>
 
 export type NutritionTotals = {
