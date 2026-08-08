@@ -100,7 +100,7 @@ export function CatalogModal({
                 </div>
                 <div className="catalog-item__actions">
                   <div className="catalog-ration-control">
-                    {rationCount > 0 && <span>В рационе: {rationCount}</span>}
+                    {rationCount > 0 && <span>Добавлено: {rationCount}</span>}
                     <button
                       className="catalog-add"
                       type="button"
