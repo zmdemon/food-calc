@@ -10,7 +10,6 @@ type CatalogModalProps = {
   onAddToRation: (productId: string) => void
   onCreate: () => void
   onImport: () => void
-  onExport: () => void
   onEdit: (product: Product) => void
   onDelete: (product: Product) => void
   onClose: () => void
@@ -23,7 +22,6 @@ export function CatalogModal({
   onAddToRation,
   onCreate,
   onImport,
-  onExport,
   onEdit,
   onDelete,
   onClose,
@@ -72,9 +70,6 @@ export function CatalogModal({
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
-          {/*<button className="button button--ghost" type="button" onClick={onExport}>*/}
-          {/*  Экспорт всех данных*/}
-          {/*</button>*/}
           <button className="button button--ghost" type="button" onClick={onImport}>
             Добавить из JSON
           </button>

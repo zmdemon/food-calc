@@ -6,6 +6,7 @@ import { Icon } from './components/Icon'
 import { ImportModal } from './components/ImportModal'
 import { ProductList } from './components/ProductList'
 import { ProductModal } from './components/ProductModal'
+import { SettingsModal } from './components/SettingsModal'
 import { Summary } from './components/Summary'
 import { TargetsModal } from './components/TargetsModal'
 import { useAppData } from './hooks/useAppData'
@@ -18,6 +19,7 @@ type OverlayState =
   | { type: 'closed' }
   | { type: 'catalog' }
   | { type: 'import' }
+  | { type: 'settings' }
   | { type: 'targets' }
   | { type: 'export' }
   | { type: 'product'; product: Product | null }
@@ -93,7 +95,6 @@ export function App() {
       daysInMonth,
     })
     downloadBackup(backup)
-    setCatalogNotice('Резервная копия скачана')
   }
 
   const addToRation = (productId: string) => {
@@ -156,6 +157,9 @@ export function App() {
             </span>
           </a>
           <div className="topbar__actions">
+            <button className="icon-button settings-button" type="button" onClick={() => setOverlay({ type: 'settings' })} aria-label="Открыть настройки" title="Настройки">
+              <Icon name="settings" size={20} />
+            </button>
             <button className="button button--primary button--catalog" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
               <Icon name="plus" size={18} />
               <span>Каталог продуктов</span>
@@ -177,7 +181,6 @@ export function App() {
           targets={targets}
           daysInMonth={daysInMonth}
           onOpenTargets={() => setOverlay({ type: 'targets' })}
-          onOpenExport={() => setOverlay({ type: 'export' })}
         />
 
         <section className="ration-section">
@@ -223,7 +226,6 @@ export function App() {
           onAddToRation={addToRation}
           onCreate={() => setOverlay({ type: 'product', product: null })}
           onImport={() => setOverlay({ type: 'import' })}
-          onExport={exportBackup}
           onEdit={(product) => setOverlay({ type: 'product', product })}
           onDelete={deleteFromCatalog}
           onClose={() => setOverlay({ type: 'closed' })}
@@ -259,7 +261,15 @@ export function App() {
       {overlay.type === 'export' && (
         <ExportModal
           report={createRationReport({ items: activeRationItems, totals, targets })}
+          onClose={() => setOverlay({ type: 'settings' })}
+        />
+      )}
+
+      {overlay.type === 'settings' && (
+        <SettingsModal
           onClose={() => setOverlay({ type: 'closed' })}
+          onOpenRationExport={() => setOverlay({ type: 'export' })}
+          onExportBackup={exportBackup}
         />
       )}
     </div>

@@ -117,6 +117,12 @@
   color: v.$color-danger;
 }
 
+.settings-button {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+}
+
 .auth-control {
   position: relative;
 
@@ -1043,6 +1049,136 @@
   width: min(100%, 720px);
 }
 
+.settings-modal {
+  width: min(100%, 820px);
+  min-height: 510px;
+  padding: 0;
+  overflow: hidden;
+
+  &__head {
+    margin: 0;
+    padding: 25px 27px 21px;
+    border-bottom: 1px solid v.$color-border;
+  }
+}
+
+.settings-layout {
+  min-height: 410px;
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+}
+
+.settings-nav {
+  padding: 18px 14px;
+  border-right: 1px solid v.$color-border;
+  background: v.$color-surface-soft;
+
+  &__item {
+    width: 100%;
+    min-height: 43px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 13px;
+    color: v.$color-muted;
+    border: 0;
+    border-radius: v.$radius-sm;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 750;
+    text-align: left;
+
+    &--active {
+      color: v.$color-primary-dark;
+      background: v.$color-primary-soft;
+    }
+  }
+}
+
+.settings-content {
+  min-width: 0;
+  padding: 27px;
+
+  &__head {
+    h3 {
+      font-size: 19px;
+      letter-spacing: -0.025em;
+    }
+
+    p {
+      margin-top: 5px;
+      color: v.$color-muted;
+      font-size: 12px;
+    }
+  }
+}
+
+.settings-export-list {
+  display: grid;
+  gap: 11px;
+  margin-top: 23px;
+}
+
+.settings-export-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-md;
+  background: v.$color-surface;
+
+  &__icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    color: v.$color-primary;
+    border-radius: 12px;
+    background: v.$color-primary-soft;
+  }
+
+  &__body {
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    p {
+      margin-top: 3px;
+      color: v.$color-muted;
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    span {
+      display: block;
+      margin-top: 5px;
+      color: #999d96;
+      font-size: 9px;
+      font-weight: 700;
+    }
+  }
+
+  .button {
+    min-width: 130px;
+    padding-inline: 14px;
+    font-size: 11px;
+  }
+}
+
+.settings-export-status {
+  min-height: 18px;
+  margin-top: 11px;
+  color: v.$color-primary;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: right;
+}
+
 .export-field {
   display: block;
 
@@ -1411,7 +1547,7 @@
 
     &__buttons {
       display: grid;
-      grid-template-columns: 0.75fr 1.25fr;
+      grid-template-columns: 1fr;
     }
 
     &__period {
@@ -1597,6 +1733,55 @@
     max-height: 94vh;
     padding: 24px 20px 22px;
     border-radius: 22px 22px 0 0;
+  }
+
+  .settings-modal {
+    min-height: 0;
+    max-height: 94vh;
+    padding: 0;
+
+    &__head {
+      padding: 22px 20px 18px;
+    }
+  }
+
+  .settings-layout {
+    min-height: 0;
+    display: block;
+  }
+
+  .settings-nav {
+    display: flex;
+    padding: 10px 20px;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid v.$color-border;
+
+    &__item {
+      width: auto;
+      min-width: max-content;
+      padding-inline: 14px;
+    }
+  }
+
+  .settings-content {
+    padding: 22px 20px 24px;
+  }
+
+  .settings-export-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    padding: 14px;
+
+    &__icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .button {
+      width: 100%;
+      grid-column: 1 / -1;
+    }
   }
 
   .catalog-toolbar {

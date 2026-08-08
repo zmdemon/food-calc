@@ -7,7 +7,6 @@ type SummaryProps = {
   targets: NutritionTargets
   daysInMonth: number
   onOpenTargets: () => void
-  onOpenExport: () => void
 }
 
 const nutrientCards = [
@@ -17,7 +16,7 @@ const nutrientCards = [
   { key: 'fiber', label: 'Клетчатка', short: 'Кл', tone: 'fiber' },
 ] as const
 
-export function Summary({ totals, targets, daysInMonth, onOpenTargets, onOpenExport }: SummaryProps) {
+export function Summary({ totals, targets, daysInMonth, onOpenTargets }: SummaryProps) {
   return (
     <section className="summary" aria-label="Сводка рациона">
       <div className="summary__heading">
@@ -28,9 +27,6 @@ export function Summary({ totals, targets, daysInMonth, onOpenTargets, onOpenExp
         <div className="summary__actions">
           {/*<div className="summary__period">Расчёт на {daysInMonth} дней</div>*/}
           <div className="summary__buttons">
-            <button className="button button--ghost summary__small-button" type="button" onClick={onOpenExport}>
-              Отчет в md
-            </button>
             <button className="button button--ghost summary__small-button" type="button" onClick={onOpenTargets}>
               <Icon name="edit" size={15} />
               Цели нутриентов
