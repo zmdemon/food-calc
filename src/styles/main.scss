@@ -18,6 +18,12 @@
     align-items: center;
     justify-content: space-between;
   }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
 }
 
 .brand {
@@ -101,6 +107,158 @@
 
 .button--danger-text {
   color: v.$color-danger;
+}
+
+.auth-control {
+  position: relative;
+
+  &__error {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 9px);
+    right: 0;
+    width: 250px;
+    padding: 9px 11px;
+    color: v.$color-danger;
+    border: 1px solid rgba(v.$color-danger, 0.16);
+    border-radius: v.$radius-sm;
+    background: v.$color-surface;
+    box-shadow: v.$shadow-card;
+    font-size: 10px;
+  }
+}
+
+.google-button {
+  min-height: 42px;
+  gap: 9px;
+  padding-inline: 14px;
+  font-size: 12px;
+
+  &__mark {
+    width: 23px;
+    height: 23px;
+    display: grid;
+    place-items: center;
+    color: #4285f4;
+    border-radius: 50%;
+    background: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+  }
+}
+
+.account-menu {
+  position: relative;
+
+  summary {
+    min-height: 44px;
+    max-width: 225px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 10px 5px 6px;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-sm;
+    background: v.$color-surface;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker { display: none; }
+
+    img,
+    > .account-menu__avatar {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 50%;
+      background: v.$color-primary-soft;
+      color: v.$color-primary;
+      font-size: 12px;
+      font-weight: 800;
+      object-fit: cover;
+    }
+
+    > div {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    strong {
+      overflow: hidden;
+      font-size: 11px;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    small {
+      margin-top: 2px;
+      font-size: 8px;
+    }
+  }
+
+  &[open] summary {
+    border-color: rgba(v.$color-primary, 0.35);
+    box-shadow: 0 0 0 3px rgba(v.$color-primary, 0.07);
+  }
+
+  &__popover {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 9px);
+    right: 0;
+    width: 265px;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-md;
+    background: v.$color-surface;
+    box-shadow: 0 16px 46px rgba(31, 37, 28, 0.15);
+
+    > strong { font-size: 13px; }
+    > span { margin-top: 2px; color: v.$color-muted; font-size: 10px; }
+
+    > button {
+      height: 36px;
+      margin-top: 13px;
+      color: v.$color-danger;
+      border: 1px solid v.$color-border;
+      border-radius: 9px;
+      background: v.$color-surface-soft;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  }
+
+  &__sync {
+    margin-top: 11px;
+    padding: 8px 9px;
+    border-radius: 8px;
+    background: v.$color-surface-soft;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  &__error {
+    margin-top: 8px;
+    color: v.$color-danger;
+    font-size: 9px;
+  }
+}
+
+.sync-status {
+  color: v.$color-muted;
+
+  &--synced { color: v.$color-primary; }
+  &--saving,
+  &--loading { color: v.$color-fat; }
+  &--error { color: v.$color-danger; }
 }
 
 .page-content {
@@ -1189,6 +1347,33 @@
     padding: 0;
 
     span { display: none; }
+  }
+
+  .topbar__actions {
+    gap: 6px;
+  }
+
+  .google-button {
+    width: 42px;
+    padding: 0;
+
+    > span:last-child { display: none; }
+  }
+
+  .account-menu {
+    summary {
+      width: 42px;
+      padding: 4px;
+
+      > div { display: none; }
+    }
+
+    &__popover {
+      position: fixed;
+      top: 64px;
+      right: 14px;
+      width: min(280px, calc(100vw - 28px));
+    }
   }
 
   .page-content {

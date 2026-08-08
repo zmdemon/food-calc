@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { AccountControl } from './components/AccountControl'
 import { CatalogModal } from './components/CatalogModal'
 import { ExportModal } from './components/ExportModal'
 import { Icon } from './components/Icon'
@@ -7,26 +8,11 @@ import { ProductList } from './components/ProductList'
 import { ProductModal } from './components/ProductModal'
 import { Summary } from './components/Summary'
 import { TargetsModal } from './components/TargetsModal'
-import { defaultAmounts, defaultProducts } from './data/defaultProducts'
-import { useLocalStorage } from './hooks/useLocalStorage'
-import type { NutritionTargets, Product, ProductFormValues, RationAmounts, RationEntry, RationItem } from './types/product'
+import { useAppData } from './hooks/useAppData'
+import type { Product, ProductFormValues, RationItem } from './types/product'
 import { calculateTotals } from './utils/calculations'
 import { createBackupJson, downloadBackup } from './utils/createBackup'
 import { createRationReport } from './utils/createRationReport'
-
-const PRODUCTS_KEY = 'food-calc.products.v1'
-const AMOUNTS_KEY = 'food-calc.amounts.v1'
-const TARGETS_KEY = 'food-calc.targets.v1'
-const HIDDEN_PRODUCTS_KEY = 'food-calc.hidden-products.v1'
-const RATION_ORDER_KEY = 'food-calc.ration-order.v1'
-const RATION_ENTRIES_KEY = 'food-calc.ration-entries.v1'
-
-const defaultTargets: NutritionTargets = {
-  protein: 0,
-  fat: 0,
-  carbs: 0,
-  fiber: 0,
-}
 
 type OverlayState =
   | { type: 'closed' }
@@ -45,43 +31,20 @@ const productWord = (count: number) => {
   return 'продуктов'
 }
 
-const readLocalStorage = <T,>(key: string, fallback: T): T => {
-  try {
-    const stored = window.localStorage.getItem(key)
-    return stored ? JSON.parse(stored) as T : fallback
-  } catch {
-    return fallback
-  }
-}
-
-const migrateLegacyRation = (products: Product[]): RationEntry[] => {
-  const amounts = readLocalStorage<RationAmounts>(AMOUNTS_KEY, defaultAmounts)
-  const hiddenProducts = readLocalStorage<Record<string, boolean>>(HIDDEN_PRODUCTS_KEY, {})
-  const legacyOrder = readLocalStorage<string[]>(RATION_ORDER_KEY, [])
-  const productIds = new Set(products.map((product) => product.id))
-  const remainingProductIds = new Set(
-    Object.keys(amounts).filter((productId) => productIds.has(productId)),
-  )
-  const orderedProductIds = [
-    ...legacyOrder.filter((productId) => remainingProductIds.delete(productId)),
-    ...remainingProductIds,
-  ]
-
-  return orderedProductIds.map((productId) => ({
-    id: `legacy:${productId}`,
-    productId,
-    amount: Number.isFinite(amounts[productId]) ? Math.max(0, amounts[productId]) : 0,
-    enabled: !hiddenProducts[productId],
-  }))
-}
-
 export function App() {
-  const [products, setProducts] = useLocalStorage<Product[]>(PRODUCTS_KEY, defaultProducts)
-  const [targets, setTargets] = useLocalStorage<NutritionTargets>(TARGETS_KEY, defaultTargets)
-  const [rationEntries, setRationEntries] = useLocalStorage<RationEntry[]>(
-    RATION_ENTRIES_KEY,
-    () => migrateLegacyRation(products),
-  )
+  const {
+    products,
+    rationEntries,
+    targets,
+    user,
+    authReady,
+    syncState,
+    setProducts,
+    setRationEntries,
+    setTargets,
+    signIn,
+    signOut,
+  } = useAppData()
   const [overlay, setOverlay] = useState<OverlayState>({ type: 'closed' })
   const [catalogNotice, setCatalogNotice] = useState('')
   const daysInMonth = 30
@@ -192,10 +155,19 @@ export function App() {
               <small>калькулятор еда</small>
             </span>
           </a>
-          <button className="button button--primary button--catalog" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
-            <Icon name="leaf" size={18} />
-            <span>База продуктов</span>
-          </button>
+          <div className="topbar__actions">
+            <button className="button button--primary button--catalog" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
+              <Icon name="leaf" size={18} />
+              <span>База продуктов</span>
+            </button>
+            <AccountControl
+              user={user}
+              authReady={authReady}
+              syncState={syncState}
+              onSignIn={signIn}
+              onSignOut={signOut}
+            />
+          </div>
         </div>
       </header>
 
@@ -239,7 +211,7 @@ export function App() {
       </main>
 
       <footer className="footer container">
-        <span>Данные хранятся только на этом устройстве</span>
+        <span>{user ? 'Данные синхронизируются с аккаунтом Google' : 'Данные хранятся только на этом устройстве'}</span>
         <span>Расчёт носит информационный характер</span>
       </footer>
 
