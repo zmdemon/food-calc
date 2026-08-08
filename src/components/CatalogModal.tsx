@@ -72,15 +72,15 @@ export function CatalogModal({
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
+          {/*<button className="button button--ghost" type="button" onClick={onExport}>*/}
+          {/*  Экспорт всех данных*/}
+          {/*</button>*/}
           <button className="button button--ghost" type="button" onClick={onImport}>
-            Импорт JSON
-          </button>
-          <button className="button button--ghost" type="button" onClick={onExport}>
-            Экспорт данных
+            Добавить из JSON
           </button>
           <button className="button button--primary" type="button" onClick={onCreate}>
             <Icon name="plus" size={17} />
-            Новый продукт
+            Добавить вручную
           </button>
         </div>
 
