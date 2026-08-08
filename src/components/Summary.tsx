@@ -22,18 +22,18 @@ export function Summary({ totals, targets, daysInMonth, onOpenTargets, onOpenExp
     <section className="summary" aria-label="Сводка рациона">
       <div className="summary__heading">
         <div>
-          <span className="eyebrow">Сводка рациона</span>
+          <span className="eyebrow">Сводка</span>
           <h1>Статистика</h1>
         </div>
         <div className="summary__actions">
-          <div className="summary__period">Расчёт на {daysInMonth} дней</div>
+          {/*<div className="summary__period">Расчёт на {daysInMonth} дней</div>*/}
           <div className="summary__buttons">
             <button className="button button--ghost summary__small-button" type="button" onClick={onOpenExport}>
-              Экспорт отчета
+              Экспорт отчета в md
             </button>
             <button className="button button--ghost summary__small-button" type="button" onClick={onOpenTargets}>
               <Icon name="edit" size={15} />
-              Настроить лимиты
+              Настроить цели нутриентов
             </button>
           </div>
         </div>

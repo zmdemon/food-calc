@@ -151,14 +151,14 @@ export function App() {
           <a className="brand" href="#top" aria-label="Рацион — на главную">
             <span className="brand__mark"><Icon name="leaf" size={21} /></span>
             <span>
-              <strong>Еда считать</strong>
-              <small>калькулятор еда</small>
+              <strong>Калькулятор еды</strong>
+              <small>бжу+стоимость в день/месяц</small>
             </span>
           </a>
           <div className="topbar__actions">
             <button className="button button--primary button--catalog" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
-              <Icon name="leaf" size={18} />
-              <span>База продуктов</span>
+              <Icon name="plus" size={18} />
+              <span>Каталог продуктов</span>
             </button>
             <AccountControl
               user={user}
@@ -184,8 +184,8 @@ export function App() {
           <div className="section-heading">
             <div>
               <span className="eyebrow">Состав</span>
-              <h2>Продукты на день</h2>
-              <p>Упрощенная версия</p>
+              <h2>Дневной набор продуктов</h2>
+              <p>v1.0</p>
             </div>
             <div className="section-heading__actions">
               <div className="section-heading__count">
@@ -193,7 +193,7 @@ export function App() {
               </div>
               <button className="button button--primary" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
                 <Icon name="plus" size={17} />
-                <span>Добавить из базы</span>
+                <span>Добавить</span>
               </button>
             </div>
           </div>
