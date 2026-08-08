@@ -17,17 +17,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
   }
 
   &__actions {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 9px;
   }
 }
 
 .brand {
+  min-width: 0;
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
   gap: 11px;
   color: v.$color-text;
@@ -50,9 +54,13 @@
   }
 
   strong {
+    display: block;
+    overflow: hidden;
     font-size: 18px;
     line-height: 1.15;
     letter-spacing: -0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   small {
@@ -1370,10 +1378,17 @@
 
     &__popover {
       position: fixed;
-      top: 64px;
+      top: 76px;
       right: 14px;
       width: min(280px, calc(100vw - 28px));
     }
+  }
+
+  .auth-control__error {
+    position: fixed;
+    top: 76px;
+    right: 14px;
+    width: min(280px, calc(100vw - 28px));
   }
 
   .page-content {
@@ -1613,6 +1628,20 @@
 
   .targets-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand {
+    gap: 0;
+
+    > span:last-child {
+      display: none;
+    }
+  }
+
+  .topbar__inner {
+    gap: 8px;
   }
 }
 
