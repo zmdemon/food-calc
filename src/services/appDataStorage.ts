@@ -1,6 +1,6 @@
 import { defaultAppData } from '../data/defaultAppData'
 import { defaultAmounts } from '../data/defaultProducts'
-import type { AppData } from '../types/appData'
+import type { AppData, ConflictBackup, LocalUserData } from '../types/appData'
 import type { NutritionTargets, Product, RationAmounts, RationEntry } from '../types/product'
 
 const GUEST_KEYS = {
@@ -11,6 +11,10 @@ const GUEST_KEYS = {
   legacyHiddenProducts: 'food-calc.hidden-products.v1',
   legacyOrder: 'food-calc.ration-order.v1',
 } as const
+
+const DEVICE_ID_KEY = 'food-calc.device-id.v1'
+const userDataKey = (uid: string) => `food-calc.user.${uid}.v2`
+const conflictBackupKey = (uid: string) => `food-calc.conflict-backup.${uid}.v1`
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -118,4 +122,57 @@ export function writeGuestAppData(data: AppData) {
   window.localStorage.setItem(GUEST_KEYS.products, JSON.stringify(data.products))
   window.localStorage.setItem(GUEST_KEYS.rationEntries, JSON.stringify(data.rationEntries))
   window.localStorage.setItem(GUEST_KEYS.targets, JSON.stringify(data.targets))
+}
+
+export function getDeviceId() {
+  const existing = window.localStorage.getItem(DEVICE_ID_KEY)
+  if (existing) return existing
+
+  const deviceId = crypto.randomUUID()
+  window.localStorage.setItem(DEVICE_ID_KEY, deviceId)
+  return deviceId
+}
+
+export function readUserAppData(uid: string): LocalUserData | null {
+  const stored = readJson<unknown>(userDataKey(uid), null)
+  if (!isRecord(stored) || !isRecord(stored.data)) return null
+
+  const baseRevision = typeof stored.baseRevision === 'number' && Number.isInteger(stored.baseRevision)
+    ? Math.max(0, stored.baseRevision)
+    : 0
+  const localRevision = typeof stored.localRevision === 'number' && Number.isInteger(stored.localRevision)
+    ? Math.max(0, stored.localRevision)
+    : 0
+
+  return {
+    data: normalizeAppData(stored.data),
+    baseRevision,
+    localRevision,
+    dirty: stored.dirty === true,
+    localUpdatedAt: typeof stored.localUpdatedAt === 'number' ? stored.localUpdatedAt : Date.now(),
+    lastSyncedAt: typeof stored.lastSyncedAt === 'number' ? stored.lastSyncedAt : null,
+    deviceId: typeof stored.deviceId === 'string' && stored.deviceId
+      ? stored.deviceId
+      : getDeviceId(),
+  }
+}
+
+export function writeUserAppData(uid: string, value: LocalUserData) {
+  window.localStorage.setItem(userDataKey(uid), JSON.stringify(value))
+}
+
+export function readConflictBackup(uid: string): ConflictBackup | null {
+  const stored = readJson<unknown>(conflictBackupKey(uid), null)
+  if (!isRecord(stored) || !isRecord(stored.data)) return null
+  if (stored.source !== 'local' && stored.source !== 'cloud') return null
+
+  return {
+    data: normalizeAppData(stored.data),
+    source: stored.source,
+    createdAt: typeof stored.createdAt === 'number' ? stored.createdAt : Date.now(),
+  }
+}
+
+export function writeConflictBackup(uid: string, value: ConflictBackup) {
+  window.localStorage.setItem(conflictBackupKey(uid), JSON.stringify(value))
 }

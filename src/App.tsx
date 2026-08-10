@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AccountControl } from './components/AccountControl'
 import { CatalogModal } from './components/CatalogModal'
 import { ExportModal } from './components/ExportModal'
@@ -8,6 +8,7 @@ import { ProductList } from './components/ProductList'
 import { ProductModal } from './components/ProductModal'
 import { SettingsModal } from './components/SettingsModal'
 import { Summary } from './components/Summary'
+import { SyncConflictModal } from './components/SyncConflictModal'
 import { TargetsModal } from './components/TargetsModal'
 import { useAppData } from './hooks/useAppData'
 import type { Product, ProductFormValues, RationItem } from './types/product'
@@ -41,15 +42,31 @@ export function App() {
     user,
     authReady,
     syncState,
+    conflict,
+    conflictBackup,
     setProducts,
     setRationEntries,
     setTargets,
     signIn,
     signOut,
+    syncNow,
+    keepLocalVersion,
+    keepCloudVersion,
   } = useAppData()
   const [overlay, setOverlay] = useState<OverlayState>({ type: 'closed' })
   const [catalogNotice, setCatalogNotice] = useState('')
+  const [conflictDialogOpen, setConflictDialogOpen] = useState(false)
+  const [deferredConflictRevision, setDeferredConflictRevision] = useState<number | null>(null)
   const daysInMonth = 30
+
+  useEffect(() => {
+    if (!conflict) {
+      setConflictDialogOpen(false)
+      setDeferredConflictRevision(null)
+      return
+    }
+    if (conflict.cloud.revision !== deferredConflictRevision) setConflictDialogOpen(true)
+  }, [conflict, deferredConflictRevision])
 
   const rationItems = useMemo(() => {
     const productsById = new Map(products.map((product) => [product.id, product]))
@@ -95,6 +112,14 @@ export function App() {
       daysInMonth,
     })
     downloadBackup(backup)
+  }
+
+  const downloadConflictBackup = () => {
+    if (!conflictBackup) return
+    downloadBackup(createBackupJson({
+      ...conflictBackup.data,
+      daysInMonth,
+    }))
   }
 
   const addToRation = (productId: string) => {
@@ -214,7 +239,13 @@ export function App() {
       </main>
 
       <footer className="footer container">
-        <span>{user ? 'Данные синхронизируются с аккаунтом Google' : 'Данные хранятся только на этом устройстве'}</span>
+        <span>{user
+          ? syncState.phase === 'conflict'
+            ? 'Синхронизация приостановлена до выбора версии'
+            : syncState.phase === 'offline'
+              ? 'Изменения сохраняются локально до подключения'
+              : 'Данные синхронизируются с аккаунтом Google'
+          : 'Данные хранятся только на этом устройстве'}</span>
         <span>Расчёт носит информационный характер</span>
       </footer>
 
@@ -267,9 +298,31 @@ export function App() {
 
       {overlay.type === 'settings' && (
         <SettingsModal
+          user={user}
+          authReady={authReady}
+          syncState={syncState}
+          conflict={conflict}
+          conflictBackup={conflictBackup}
           onClose={() => setOverlay({ type: 'closed' })}
           onOpenRationExport={() => setOverlay({ type: 'export' })}
           onExportBackup={exportBackup}
+          onDownloadConflictBackup={downloadConflictBackup}
+          onOpenConflict={() => setConflictDialogOpen(true)}
+          onSignIn={signIn}
+          onSignOut={signOut}
+          onSyncNow={syncNow}
+        />
+      )}
+
+      {conflict && conflictDialogOpen && (
+        <SyncConflictModal
+          conflict={conflict}
+          onKeepLocal={keepLocalVersion}
+          onKeepCloud={keepCloudVersion}
+          onDefer={() => {
+            setDeferredConflictRevision(conflict.cloud.revision)
+            setConflictDialogOpen(false)
+          }}
         />
       )}
     </div>

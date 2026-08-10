@@ -14,8 +14,11 @@ const syncLabels: Record<SyncState['phase'], string> = {
   initializing: 'Подключение…',
   guest: 'Данные на устройстве',
   loading: 'Загрузка данных…',
-  saving: 'Сохранение…',
-  synced: 'Сохранено в облаке',
+  'local-changes': 'Есть локальные изменения',
+  saving: 'Синхронизация…',
+  synced: 'Синхронизировано',
+  conflict: 'Требуется подтверждение',
+  offline: 'Нет подключения',
   error: 'Ошибка синхронизации',
 }
 
