@@ -1,8 +1,14 @@
 import type { NutritionTargets, Product, RationEntry } from './product'
 
+export type RationTab = {
+  id: string
+  name: string
+  rationEntries: RationEntry[]
+}
+
 export type AppData = {
   products: Product[]
-  rationEntries: RationEntry[]
+  rationTabs: RationTab[]
   targets: NutritionTargets
 }
 

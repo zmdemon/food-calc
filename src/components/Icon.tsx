@@ -1,4 +1,4 @@
-type IconName = 'plus' | 'edit' | 'trash' | 'close' | 'minus' | 'leaf' | 'wallet' | 'eye' | 'eye-off' | 'grip-vertical' | 'settings' | 'database' | 'file-text' | 'download' | 'cloud' | 'refresh'
+type IconName = 'plus' | 'edit' | 'trash' | 'close' | 'minus' | 'leaf' | 'wallet' | 'eye' | 'eye-off' | 'grip-vertical' | 'settings' | 'database' | 'file-text' | 'download' | 'cloud' | 'refresh' | 'chevron-down'
 
 type IconProps = {
   name: IconName
@@ -19,6 +19,7 @@ const paths: Record<IconName, React.ReactNode> = {
   download: <><path d="M12 3v12m0 0 5-5m-5 5-5-5" /><path d="M5 21h14" /></>,
   cloud: <path d="M17.5 19H7a5 5 0 0 1-.7-9.9A6 6 0 0 1 17.8 8a4.5 4.5 0 0 1-.3 11Z" />,
   refresh: <><path d="M20 7v5h-5" /><path d="M4 17v-5h5M6.1 9A7 7 0 0 1 18.7 7M17.9 15A7 7 0 0 1 5.3 17" /></>,
+  'chevron-down': <path d="m6 9 6 6 6-6" />,
   eye: <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></>,
   'eye-off': <><path d="m3 3 18 18M10.6 10.7a2 2 0 0 0 2.7 2.7M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.1 3M6.6 6.6C3.5 8.5 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" /></>,
   'grip-vertical': <><circle cx="9" cy="5" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="5" r="1" fill="currentColor" stroke="none" /><circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="9" cy="19" r="1" fill="currentColor" stroke="none" /><circle cx="15" cy="19" r="1" fill="currentColor" stroke="none" /></>,

@@ -6,12 +6,14 @@ import { Icon } from './components/Icon'
 import { ImportModal } from './components/ImportModal'
 import { ProductList } from './components/ProductList'
 import { ProductModal } from './components/ProductModal'
+import { RationTabs } from './components/RationTabs'
 import { SettingsModal } from './components/SettingsModal'
 import { Summary } from './components/Summary'
 import { SyncConflictModal } from './components/SyncConflictModal'
 import { TargetsModal } from './components/TargetsModal'
 import { useAppData } from './hooks/useAppData'
-import type { Product, ProductFormValues, RationItem } from './types/product'
+import type { RationTab } from './types/appData'
+import type { Product, ProductFormValues, RationEntry, RationItem } from './types/product'
 import { calculateTotals } from './utils/calculations'
 import { createBackupJson, downloadBackup } from './utils/createBackup'
 import { createRationReport } from './utils/createRationReport'
@@ -37,7 +39,7 @@ const productWord = (count: number) => {
 export function App() {
   const {
     products,
-    rationEntries,
+    rationTabs,
     targets,
     user,
     authReady,
@@ -46,7 +48,7 @@ export function App() {
     conflict,
     conflictBackup,
     setProducts,
-    setRationEntries,
+    setRationTabs,
     setTargets,
     signIn,
     signOut,
@@ -56,9 +58,19 @@ export function App() {
   } = useAppData()
   const [overlay, setOverlay] = useState<OverlayState>({ type: 'closed' })
   const [catalogNotice, setCatalogNotice] = useState('')
+  const [activeTabId, setActiveTabId] = useState(() => rationTabs[0]?.id ?? '')
   const [conflictDialogOpen, setConflictDialogOpen] = useState(false)
   const [deferredConflictRevision, setDeferredConflictRevision] = useState<number | null>(null)
   const daysInMonth = 30
+
+  const activeTab = rationTabs.find((tab) => tab.id === activeTabId) ?? rationTabs[0]
+  const rationEntries = activeTab?.rationEntries ?? []
+
+  useEffect(() => {
+    if (!rationTabs.some((tab) => tab.id === activeTabId)) {
+      setActiveTabId(rationTabs[0]?.id ?? '')
+    }
+  }, [activeTabId, rationTabs])
 
   useEffect(() => {
     if (!conflict) {
@@ -108,7 +120,7 @@ export function App() {
   const exportBackup = () => {
     const backup = createBackupJson({
       products,
-      rationEntries,
+      rationTabs,
       targets,
       daysInMonth,
     })
@@ -123,8 +135,56 @@ export function App() {
     }))
   }
 
+  const updateActiveRationEntries = (
+    updater: (entries: RationEntry[]) => RationEntry[],
+  ) => {
+    if (!activeTab) return
+    setRationTabs((current) => current.map((tab) => (
+      tab.id === activeTab.id
+        ? { ...tab, rationEntries: updater(tab.rationEntries) }
+        : tab
+    )))
+  }
+
+  const createRationTab = () => {
+    const nextTab: RationTab = {
+      id: crypto.randomUUID(),
+      name: `Набор ${rationTabs.length + 1}`,
+      rationEntries: [],
+    }
+    setRationTabs((current) => [...current, nextTab])
+    setActiveTabId(nextTab.id)
+  }
+
+  const renameRationTab = (tabId: string, name: string) => {
+    const normalizedName = name.trim().slice(0, 60)
+    if (!normalizedName) return
+    setRationTabs((current) => current.map((tab) => (
+      tab.id === tabId && tab.name !== normalizedName ? { ...tab, name: normalizedName } : tab
+    )))
+  }
+
+  const deleteRationTab = (tabId: string) => {
+    if (rationTabs.length <= 1) return
+    const tabIndex = rationTabs.findIndex((tab) => tab.id === tabId)
+    if (tabIndex < 0) return
+
+    const tab = rationTabs[tabIndex]
+    if (
+      tab.rationEntries.length > 0
+      && !window.confirm(`Удалить вкладку «${tab.name}» и все продукты в ней?`)
+    ) return
+
+    setRationTabs((current) => current.length > 1
+      ? current.filter((item) => item.id !== tabId)
+      : current)
+    if (tabId === activeTabId) {
+      setActiveTabId(rationTabs[tabIndex - 1]?.id ?? rationTabs[1].id)
+    }
+  }
+
   const addToRation = (productId: string) => {
-    setRationEntries((current) => [...current, {
+    updateActiveRationEntries((current) => [...current, {
       id: crypto.randomUUID(),
       productId,
       amount: 100,
@@ -133,27 +193,27 @@ export function App() {
   }
 
   const removeFromRation = (entryId: string) => {
-    setRationEntries((current) => current.filter((entry) => entry.id !== entryId))
+    updateActiveRationEntries((current) => current.filter((entry) => entry.id !== entryId))
   }
 
   const updateRationAmount = (entryId: string, amount: number) => {
-    setRationEntries((current) => current.map((entry) => (
+    updateActiveRationEntries((current) => current.map((entry) => (
       entry.id === entryId ? { ...entry, amount } : entry
     )))
   }
 
   const toggleProductVisibility = (entryId: string) => {
-    setRationEntries((current) => current.map((entry) => (
+    updateActiveRationEntries((current) => current.map((entry) => (
       entry.id === entryId ? { ...entry, enabled: !entry.enabled } : entry
     )))
   }
 
   const setAllProductsVisibility = (enabled: boolean) => {
-    setRationEntries((current) => current.map((entry) => ({ ...entry, enabled })))
+    updateActiveRationEntries((current) => current.map((entry) => ({ ...entry, enabled })))
   }
 
   const reorderRation = (entryIds: string[]) => {
-    setRationEntries((current) => {
+    updateActiveRationEntries((current) => {
       const entriesById = new Map(current.map((entry) => [entry.id, entry]))
       const orderedEntries = entryIds.flatMap((entryId) => {
         const entry = entriesById.get(entryId)
@@ -166,9 +226,12 @@ export function App() {
   }
 
   const deleteFromCatalog = (product: Product) => {
-    if (!window.confirm(`Удалить «${product.name}» из каталога? Все его позиции также исчезнут из дневного рациона.`)) return
+    if (!window.confirm(`Удалить «${product.name}» из каталога? Все его позиции также исчезнут из всех вкладок.`)) return
     setProducts((current) => current.filter((item) => item.id !== product.id))
-    setRationEntries((current) => current.filter((entry) => entry.productId !== product.id))
+    setRationTabs((current) => current.map((tab) => ({
+      ...tab,
+      rationEntries: tab.rationEntries.filter((entry) => entry.productId !== product.id),
+    })))
   }
 
   if (!dataReady) {
@@ -239,6 +302,14 @@ export function App() {
               </button>
             </div>
           </div>
+          <RationTabs
+            tabs={rationTabs}
+            activeTabId={activeTab?.id ?? ''}
+            onSelect={setActiveTabId}
+            onCreate={createRationTab}
+            onRename={renameRationTab}
+            onDelete={deleteRationTab}
+          />
           <ProductList
             items={rationItems}
             onAmountChange={updateRationAmount}

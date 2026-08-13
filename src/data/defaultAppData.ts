@@ -3,12 +3,16 @@ import { defaultAmounts, defaultProducts } from './defaultProducts'
 
 export const defaultAppData: AppData = {
   products: defaultProducts,
-  rationEntries: Object.entries(defaultAmounts).map(([productId, amount]) => ({
-    id: `legacy:${productId}`,
-    productId,
-    amount,
-    enabled: true,
-  })),
+  rationTabs: [{
+    id: 'default-ration',
+    name: 'Набор 1',
+    rationEntries: Object.entries(defaultAmounts).map(([productId, amount]) => ({
+      id: `legacy:${productId}`,
+      productId,
+      amount,
+      enabled: true,
+    })),
+  }],
   targets: {
     protein: 0,
     fat: 0,

@@ -1,10 +1,11 @@
 import { defaultAppData } from '../data/defaultAppData'
 import { defaultAmounts } from '../data/defaultProducts'
-import type { AppData, ConflictBackup, LocalUserData } from '../types/appData'
+import type { AppData, ConflictBackup, LocalUserData, RationTab } from '../types/appData'
 import type { NutritionTargets, Product, RationAmounts, RationEntry } from '../types/product'
 
 const GUEST_KEYS = {
   products: 'food-calc.products.v1',
+  rationTabs: 'food-calc.ration-tabs.v1',
   rationEntries: 'food-calc.ration-entries.v1',
   targets: 'food-calc.targets.v1',
   legacyAmounts: 'food-calc.amounts.v1',
@@ -57,6 +58,27 @@ const normalizeRationEntry = (value: unknown): RationEntry | null => {
   }
 }
 
+const normalizeRationTabs = (value: unknown): RationTab[] => {
+  if (!Array.isArray(value)) return []
+
+  const seenIds = new Set<string>()
+  return value.flatMap<RationTab>((item, index) => {
+    if (!isRecord(item) || typeof item.id !== 'string' || seenIds.has(item.id)) return []
+    seenIds.add(item.id)
+
+    const name = typeof item.name === 'string' && item.name.trim()
+      ? item.name.trim().slice(0, 60)
+      : `Набор ${index + 1}`
+    const rationEntries = Array.isArray(item.rationEntries)
+      ? item.rationEntries
+        .map(normalizeRationEntry)
+        .filter((entry): entry is RationEntry => entry !== null)
+      : []
+
+    return [{ id: item.id, name, rationEntries }]
+  })
+}
+
 const normalizeTargets = (value: unknown): NutritionTargets => {
   const source = isRecord(value) ? value : {}
   return {
@@ -94,33 +116,41 @@ export function normalizeAppData(value: unknown, fallback = defaultAppData): App
   const products = Array.isArray(value.products)
     ? value.products.map(normalizeProduct).filter((product): product is Product => product !== null)
     : fallback.products
-  const rationEntries = Array.isArray(value.rationEntries)
+  const legacyRationEntries = Array.isArray(value.rationEntries)
     ? value.rationEntries.map(normalizeRationEntry).filter((entry): entry is RationEntry => entry !== null)
     : Array.isArray(value.ration)
       ? value.ration.map(normalizeRationEntry).filter((entry): entry is RationEntry => entry !== null)
-      : fallback.rationEntries
+      : null
+  const storedTabs = normalizeRationTabs(value.rationTabs)
+  const rationTabs = storedTabs.length > 0
+    ? storedTabs
+    : legacyRationEntries
+      ? [{ id: 'migrated-ration', name: 'Набор 1', rationEntries: legacyRationEntries }]
+      : fallback.rationTabs
 
   return {
     products,
-    rationEntries,
+    rationTabs,
     targets: value.targets === undefined ? fallback.targets : normalizeTargets(value.targets),
   }
 }
 
 export function readGuestAppData(): AppData {
   const products = readJson<Product[]>(GUEST_KEYS.products, defaultAppData.products)
+  const storedRationTabs = readJson<RationTab[] | null>(GUEST_KEYS.rationTabs, null)
   const storedRationEntries = readJson<RationEntry[] | null>(GUEST_KEYS.rationEntries, null)
 
   return normalizeAppData({
     products,
-    rationEntries: storedRationEntries ?? migrateLegacyRation(products),
+    rationTabs: storedRationTabs,
+    rationEntries: storedRationTabs ? undefined : storedRationEntries ?? migrateLegacyRation(products),
     targets: readJson(GUEST_KEYS.targets, defaultAppData.targets),
   })
 }
 
 export function writeGuestAppData(data: AppData) {
   window.localStorage.setItem(GUEST_KEYS.products, JSON.stringify(data.products))
-  window.localStorage.setItem(GUEST_KEYS.rationEntries, JSON.stringify(data.rationEntries))
+  window.localStorage.setItem(GUEST_KEYS.rationTabs, JSON.stringify(data.rationTabs))
   window.localStorage.setItem(GUEST_KEYS.targets, JSON.stringify(data.targets))
 }
 

@@ -1,31 +1,35 @@
-import type { NutritionTargets, Product, RationEntry } from '../types/product'
+import type { RationTab } from '../types/appData'
+import type { NutritionTargets, Product } from '../types/product'
 
 type CreateBackupParams = {
   products: Product[]
-  rationEntries: RationEntry[]
+  rationTabs: RationTab[]
   targets: NutritionTargets
   daysInMonth: number
 }
 
 export function createBackupJson({
   products,
-  rationEntries,
+  rationTabs,
   targets,
   daysInMonth,
 }: CreateBackupParams) {
   const productIds = new Set(products.map((product) => product.id))
-  const ration = rationEntries.filter(({ productId }) => productIds.has(productId))
+  const normalizedTabs = rationTabs.map((tab) => ({
+    ...tab,
+    rationEntries: tab.rationEntries.filter(({ productId }) => productIds.has(productId)),
+  }))
 
   return JSON.stringify({
     format: 'food-calc-backup',
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
     settings: {
       daysInMonth,
     },
     targets,
     products,
-    ration,
+    rationTabs: normalizedTabs,
   }, null, 2)
 }
 

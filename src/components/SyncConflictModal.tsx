@@ -25,6 +25,14 @@ export function SyncConflictModal({
     () => JSON.stringify(conflict.local.data.targets) === JSON.stringify(conflict.cloud.data.targets),
     [conflict],
   )
+  const localEntryCount = useMemo(
+    () => conflict.local.data.rationTabs.reduce((sum, tab) => sum + tab.rationEntries.length, 0),
+    [conflict],
+  )
+  const cloudEntryCount = useMemo(
+    () => conflict.cloud.data.rationTabs.reduce((sum, tab) => sum + tab.rationEntries.length, 0),
+    [conflict],
+  )
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -81,8 +89,13 @@ export function SyncConflictModal({
           </div>
           <div className="sync-compare__row" role="row">
             <span role="cell">Позиций рациона</span>
-            <strong role="cell">{conflict.local.data.rationEntries.length}</strong>
-            <strong role="cell">{conflict.cloud.data.rationEntries.length}</strong>
+            <strong role="cell">{localEntryCount}</strong>
+            <strong role="cell">{cloudEntryCount}</strong>
+          </div>
+          <div className="sync-compare__row" role="row">
+            <span role="cell">Вкладок</span>
+            <strong role="cell">{conflict.local.data.rationTabs.length}</strong>
+            <strong role="cell">{conflict.cloud.data.rationTabs.length}</strong>
           </div>
           <div className="sync-compare__row" role="row">
             <span role="cell">Цели питания</span>

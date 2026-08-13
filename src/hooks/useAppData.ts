@@ -33,12 +33,13 @@ import type {
   CloudDataVersion,
   ConflictBackup,
   LocalUserData,
+  RationTab,
   SyncConflict,
   SyncState,
 } from '../types/appData'
-import type { NutritionTargets, Product, RationEntry } from '../types/product'
+import type { NutritionTargets, Product } from '../types/product'
 
-const CLOUD_SCHEMA_VERSION = 2
+const CLOUD_SCHEMA_VERSION = 3
 const LOCAL_SAVE_DELAY_MS = 250
 const CLOUD_SAVE_DELAY_MS = 900
 
@@ -77,7 +78,7 @@ type AppDataController = AppData & {
   conflict: SyncConflict | null
   conflictBackup: ConflictBackup | null
   setProducts: Dispatch<SetStateAction<Product[]>>
-  setRationEntries: Dispatch<SetStateAction<RationEntry[]>>
+  setRationTabs: Dispatch<SetStateAction<RationTab[]>>
   setTargets: Dispatch<SetStateAction<NutritionTargets>>
   signIn: () => Promise<void>
   signOut: () => Promise<void>
@@ -590,8 +591,8 @@ export function useAppData(): AppDataController {
     (value) => updateField('products', value),
     [updateField],
   )
-  const setRationEntries = useCallback<Dispatch<SetStateAction<RationEntry[]>>>(
-    (value) => updateField('rationEntries', value),
+  const setRationTabs = useCallback<Dispatch<SetStateAction<RationTab[]>>>(
+    (value) => updateField('rationTabs', value),
     [updateField],
   )
   const setTargets = useCallback<Dispatch<SetStateAction<NutritionTargets>>>(
@@ -728,7 +729,7 @@ export function useAppData(): AppDataController {
     conflict,
     conflictBackup,
     setProducts,
-    setRationEntries,
+    setRationTabs,
     setTargets,
     signIn,
     signOut,
