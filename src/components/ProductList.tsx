@@ -19,6 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import type { Product, RationItem } from '../types/product'
 import { formatMoney, formatNumber } from '../utils/calculations'
+import { getNutrientHighlight } from '../utils/nutrientHighlight'
 import { Icon } from './Icon'
 import { QuantityControl } from './QuantityControl'
 
@@ -65,6 +66,7 @@ function SortableProductRow({
   } = useSortable({ id: entryId })
   const factor = amount / 100
   const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
+  const nutrientHighlight = getNutrientHighlight(product, amount)
   const className = [
     isHidden ? 'product-row--hidden' : '',
     isDragging ? 'product-row--dragging' : '',
@@ -74,7 +76,11 @@ function SortableProductRow({
     <tr
       ref={setNodeRef}
       className={className}
+      data-dominant-nutrient={nutrientHighlight
+        ? [nutrientHighlight.nutrient, nutrientHighlight.secondaryNutrient].filter(Boolean).join('+')
+        : undefined}
       style={{
+        ...nutrientHighlight?.style,
         transform: CSS.Transform.toString(transform),
         transition,
       }}
@@ -239,8 +245,16 @@ export function ProductList({
           const isHidden = !entry.enabled
           const factor = amount / 100
           const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
+          const nutrientHighlight = getNutrientHighlight(product, amount)
           return (
-            <article className={`product-card ${isHidden ? 'product-card--hidden' : ''}`} key={entry.id}>
+            <article
+              className={`product-card ${isHidden ? 'product-card--hidden' : ''}`}
+              data-dominant-nutrient={nutrientHighlight
+                ? [nutrientHighlight.nutrient, nutrientHighlight.secondaryNutrient].filter(Boolean).join('+')
+                : undefined}
+              key={entry.id}
+              style={nutrientHighlight?.style}
+            >
               <div className="product-card__head">
                 <div>
                   <div className="product-title-line">

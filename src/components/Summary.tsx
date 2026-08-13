@@ -49,7 +49,7 @@ export function Summary({ totals, targets, daysInMonth, onOpenTargets }: Summary
           <div className="metric-card__icon"><Icon name="wallet" size={22} /></div>
           <div className="metric-card__costs">
             <div>
-              <span className="metric-card__label">Стоимость дня</span>
+              <span className="metric-card__label">В день</span>
               <strong>{formatMoney(totals.cost)}</strong>
             </div>
             <div className="metric-card__divider" />

@@ -199,10 +199,10 @@ export function App() {
             <button className="icon-button settings-button" type="button" onClick={() => setOverlay({ type: 'settings' })} aria-label="Открыть настройки" title="Настройки">
               <Icon name="settings" size={20} />
             </button>
-            <button className="button button--primary button--catalog" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
-              <Icon name="plus" size={18} />
-              <span>Каталог продуктов</span>
-            </button>
+            {/*<button className="button button--primary button--catalog" type="button" onClick={() => setOverlay({ type: 'catalog' })}>*/}
+            {/*  <Icon name="plus" size={18} />*/}
+            {/*  <span>Каталог продуктов</span>*/}
+            {/*</button>*/}
             <AccountControl
               user={user}
               authReady={authReady}

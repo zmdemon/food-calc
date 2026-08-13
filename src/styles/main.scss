@@ -645,14 +645,45 @@
   }
 
   tbody tr {
-    transition: background v.$transition;
+    background-color: v.$color-surface;
+    background-image: linear-gradient(
+      90deg,
+      rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-alpha, 0)) 0%,
+      rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-alpha, 0)) 44%,
+      rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-alpha, 0)) 56%,
+      rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-alpha, 0)) 100%
+    );
+    transition: background-color v.$transition;
 
     &:hover {
-      background: #fbfbf8;
+      background-image: linear-gradient(
+        90deg,
+        rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-hover-alpha, 0.02)) 0%,
+        rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-hover-alpha, 0.02)) 44%,
+        rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-hover-alpha, 0.02)) 56%,
+        rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-hover-alpha, 0.02)) 100%
+      );
     }
 
     &:last-child td {
       border-bottom: 0;
+    }
+
+    td:first-child {
+      position: relative;
+
+      &::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 4px;
+        background: linear-gradient(
+          to bottom,
+          rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-marker-alpha, 0)),
+          rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-marker-alpha, 0))
+        );
+        content: '';
+        pointer-events: none;
+      }
     }
   }
 }
@@ -753,7 +784,12 @@
 }
 
 .product-row--hidden {
-  background: #f8f8f5;
+  background-color: #f8f8f5 !important;
+  background-image: none !important;
+
+  td:first-child::before {
+    opacity: 0.22;
+  }
 
   td:not(:last-child) {
     opacity: 0.42;
@@ -1914,11 +1950,47 @@
 
   .product-card {
     @include m.card;
+    position: relative;
     width: 100%;
     min-width: 0;
     max-width: 100%;
     padding: 18px;
+    overflow: hidden;
     border-radius: v.$radius-md;
+    background-color: v.$color-surface;
+    background-image: linear-gradient(
+      135deg,
+      rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-alpha, 0)) 0%,
+      rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-alpha, 0)) 44%,
+      rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-alpha, 0)) 56%,
+      rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-alpha, 0)) 100%
+    );
+    transition: background-color v.$transition, border-color v.$transition;
+
+    &::before {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: linear-gradient(
+        to bottom,
+        rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-marker-alpha, 0)),
+        rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-marker-alpha, 0))
+      );
+      content: '';
+      pointer-events: none;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        background-image: linear-gradient(
+          135deg,
+          rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-hover-alpha, 0.02)) 0%,
+          rgba(var(--nutrient-rgb, 255, 255, 255), var(--nutrient-hover-alpha, 0.02)) 44%,
+          rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-hover-alpha, 0.02)) 56%,
+          rgba(var(--nutrient-secondary-rgb, 255, 255, 255), var(--nutrient-secondary-hover-alpha, 0.02)) 100%
+        );
+      }
+    }
 
     &__head {
       display: flex;
@@ -2007,7 +2079,10 @@
     }
 
     &--hidden {
-      background: #f8f8f5;
+      background-color: #f8f8f5;
+      background-image: none;
+
+      &::before { opacity: 0.22; }
 
       .product-card__head > div:first-child,
       .quantity-control,
