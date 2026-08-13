@@ -41,6 +41,7 @@ export function App() {
     targets,
     user,
     authReady,
+    dataReady,
     syncState,
     conflict,
     conflictBackup,
@@ -168,6 +169,19 @@ export function App() {
     if (!window.confirm(`Удалить «${product.name}» из каталога? Все его позиции также исчезнут из дневного рациона.`)) return
     setProducts((current) => current.filter((item) => item.id !== product.id))
     setRationEntries((current) => current.filter((entry) => entry.productId !== product.id))
+  }
+
+  if (!dataReady) {
+    return (
+      <main className="app-loader" aria-busy="true" aria-live="polite">
+        <div className="app-loader__card" role="status">
+          <span className="app-loader__brand"><Icon name="leaf" size={25} /></span>
+          <span className="app-loader__spinner" aria-hidden="true" />
+          <strong>{authReady ? 'Синхронизация данных…' : 'Подготовка приложения…'}</strong>
+          <p>Загружаем актуальную версию каталога и рациона</p>
+        </div>
+      </main>
+    )
   }
 
   return (

@@ -6,6 +6,62 @@
   min-height: 100vh;
 }
 
+.app-loader {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+
+  &__card {
+    width: min(100%, 360px);
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    padding: 34px 30px;
+    text-align: center;
+    border: 1px solid rgba(v.$color-border, 0.85);
+    border-radius: v.$radius-lg;
+    background: rgba(v.$color-surface, 0.92);
+    box-shadow: v.$shadow-card;
+  }
+
+  &__brand {
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    color: white;
+    border-radius: 17px;
+    background: v.$color-primary;
+    box-shadow: 0 9px 24px rgba(v.$color-primary, 0.22);
+  }
+
+  &__spinner {
+    width: 26px;
+    height: 26px;
+    margin-top: 24px;
+    border: 3px solid v.$color-primary-soft;
+    border-top-color: v.$color-primary;
+    border-radius: 50%;
+    animation: app-loader-spin 700ms linear infinite;
+  }
+
+  strong {
+    margin-top: 14px;
+    font-size: 15px;
+  }
+
+  p {
+    margin-top: 4px;
+    color: v.$color-muted;
+    font-size: 11px;
+  }
+}
+
+@keyframes app-loader-spin {
+  to { transform: rotate(360deg); }
+}
+
 .topbar {
   height: 78px;
   border-bottom: 1px solid rgba(v.$color-border, 0.8);

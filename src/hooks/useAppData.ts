@@ -72,6 +72,7 @@ class RevisionConflictError extends Error {
 type AppDataController = AppData & {
   user: User | null
   authReady: boolean
+  dataReady: boolean
   syncState: SyncState
   conflict: SyncConflict | null
   conflictBackup: ConflictBackup | null
@@ -89,6 +90,7 @@ export function useAppData(): AppDataController {
   const [data, setData] = useState<AppData>(() => readGuestAppData())
   const [user, setUser] = useState<User | null>(auth.currentUser)
   const [authReady, setAuthReady] = useState(false)
+  const [dataReady, setDataReady] = useState(false)
   const [syncState, setSyncState] = useState<SyncState>({ phase: 'initializing' })
   const [conflict, setConflict] = useState<SyncConflict | null>(null)
   const [conflictBackup, setConflictBackup] = useState<ConflictBackup | null>(null)
@@ -112,6 +114,7 @@ export function useAppData(): AppDataController {
   const applyData = useCallback((nextData: AppData) => {
     dataRef.current = nextData
     setData(nextData)
+    setDataReady(true)
   }, [])
 
   const clearTimers = useCallback(() => {
@@ -348,6 +351,7 @@ export function useAppData(): AppDataController {
       cloudVersionRef.current = null
       conflictRef.current = null
       setConflict(null)
+      setDataReady(false)
       userRef.current = nextUser
       activeUidRef.current = nextUser?.uid ?? null
       setUser(nextUser)
@@ -719,6 +723,7 @@ export function useAppData(): AppDataController {
     ...data,
     user,
     authReady,
+    dataReady,
     syncState,
     conflict,
     conflictBackup,
