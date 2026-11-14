@@ -21,17 +21,7 @@ export function Summary({ totals, targets, daysInMonth, onOpenTargets }: Summary
     <section className="summary" aria-label="Сводка рациона">
       <div className="summary__heading">
         <div>
-          <span className="eyebrow">Сводка</span>
           <h1>Статистика</h1>
-        </div>
-        <div className="summary__actions">
-          {/*<div className="summary__period">Расчёт на {daysInMonth} дней</div>*/}
-          <div className="summary__buttons">
-            <button className="button button--ghost summary__small-button" type="button" onClick={onOpenTargets}>
-              <Icon name="edit" size={15} />
-              Цели нутриентов
-            </button>
-          </div>
         </div>
       </div>
 
@@ -39,7 +29,6 @@ export function Summary({ totals, targets, daysInMonth, onOpenTargets }: Summary
         <article className="metric-card metric-card--calories">
           <div className="metric-card__icon"><Icon name="leaf" size={22} /></div>
           <div>
-            <span className="metric-card__label">Энергия за день</span>
             <strong>{formatNumber(totals.calories)}</strong>
             <span className="metric-card__unit">ккал</span>
           </div>
@@ -61,35 +50,40 @@ export function Summary({ totals, targets, daysInMonth, onOpenTargets }: Summary
         </article>
 
         <article className="macro-card">
-          {nutrientCards.map((item) => {
-            const target = targets[item.key]
-            const ratio = target > 0 ? totals[item.key] / target : 0
-            const status = target <= 0 ? 'unset' : ratio >= 1 ? 'reached' : ratio >= 0.8 ? 'near' : 'progress'
-            const percentage = Math.round(ratio * 100)
+          <div className="macro-card__grid">
+            {nutrientCards.map((item) => {
+              const target = targets[item.key]
+              const ratio = target > 0 ? totals[item.key] / target : 0
+              const status = target <= 0 ? 'unset' : ratio >= 1 ? 'reached' : ratio >= 0.8 ? 'near' : 'progress'
+              const percentage = Math.round(ratio * 100)
 
-            return (
-              <div className={`macro-card__item macro-card__item--${status}`} key={item.key}>
-                <span className={`macro-card__badge macro-card__badge--${item.tone}`}>{item.short}</span>
-                <div className="macro-card__content">
-                  <div className="macro-card__label-row">
-                    <span>{item.label}</span>
-                    {target > 0 && <em>{percentage}%</em>}
-                  </div>
-                  <strong>
-                    {formatNumber(totals[item.key], 1)}
-                    {target > 0 && <small> / {formatNumber(target, 1)}</small>} г
-                  </strong>
-                  {target > 0 ? (
-                    <div className="macro-card__progress" aria-label={`${item.label}: ${percentage}% от цели`}>
-                      <i style={{ width: `${Math.min(100, percentage)}%` }} />
+              return (
+                <div className={`macro-card__item macro-card__item--${status}`} key={item.key}>
+                  <span className={`macro-card__badge macro-card__badge--${item.tone}`}>{item.short}</span>
+                  <div className="macro-card__content">
+                    <div className="macro-card__label-row">
+                      <span>{item.label}</span>
+                      {target > 0 && <em>{percentage}%</em>}
                     </div>
-                  ) : (
-                    <small className="macro-card__unset">Цель не задана</small>
-                  )}
+                    <strong>
+                      {formatNumber(totals[item.key], 1)}
+                      {target > 0 && <small> / {formatNumber(target, 1)}</small>} г
+                    </strong>
+                    {target > 0 ? (
+                      <div className="macro-card__progress" aria-label={`${item.label}: ${percentage}% от цели`}>
+                        <i style={{ width: `${Math.min(100, percentage)}%` }} />
+                      </div>
+                    ) : (
+                      <small className="macro-card__unset">Цель не задана</small>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
+          <button className="macro-card__edit" type="button" onClick={onOpenTargets} aria-label="Настроить цели нутриентов" title="Настроить цели">
+            <Icon name="edit" size={15} />
+          </button>
         </article>
       </div>
     </section>

@@ -465,12 +465,48 @@
 }
 
 .macro-card {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 19px 16px;
-  padding: 21px 24px;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: start;
+  column-gap: 12px;
+  padding: 21px 12px 21px 24px;
+
+  &__grid {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 19px 16px;
+  }
+
+  &__edit {
+    align-self: start;
+    margin-top: -2px;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: v.$color-muted;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    transition: color v.$transition, background v.$transition;
+
+    &:hover {
+      color: v.$color-text;
+      background: v.$color-surface-soft;
+    }
+
+    &:focus-visible {
+      outline: 2px solid v.$color-border;
+      outline-offset: 2px;
+    }
+  }
 
   &__item {
+    min-width: 0;
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -610,10 +646,14 @@
   gap: 6px;
   margin-bottom: 9px;
 
+  &__mobile {
+    display: none;
+  }
+
   &__list {
     min-width: 0;
     display: flex;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     gap: 6px;
     overflow: hidden;
   }
@@ -621,6 +661,7 @@
   &__overflow {
     position: relative;
     flex: 0 0 auto;
+    margin-left: auto;
   }
 
   &__control {
@@ -631,19 +672,24 @@
     flex: 0 0 auto;
     place-items: center;
     padding: 0;
-    color: v.$color-muted;
-    border: 1px solid v.$color-border;
-    border-radius: 11px;
-    background: v.$color-surface;
+    color: v.$color-primary;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     cursor: pointer;
-    transition: color v.$transition, border-color v.$transition, background v.$transition;
+    transition: background v.$transition;
 
-    &:hover,
-    &--active {
-      color: v.$color-primary;
-      border-color: rgba(v.$color-primary, 0.3);
-      background: v.$color-primary-soft;
+    &:hover { background: v.$color-surface-soft; }
+
+    > svg {
+      transform: rotate(0deg);
+      transition: transform v.$transition;
     }
+
+    &--active,
+    &--active:hover { background: v.$color-surface; }
+
+    &--active > svg { transform: rotate(180deg); }
 
     > span {
       position: absolute;
@@ -663,27 +709,195 @@
     }
   }
 
-  &__add {
-    color: v.$color-primary;
-    border-color: rgba(v.$color-primary, 0.25);
-    background: v.$color-primary-soft;
+  @include m.mobile {
+    justify-content: flex-end;
+
+    > .ration-tabs__list,
+    > .ration-tabs__overflow,
+    > .ration-tabs__add {
+      display: none;
+    }
+
+    &__mobile {
+      position: relative;
+      width: fit-content;
+      max-width: min(240px, 100%);
+      min-width: 0;
+      display: block;
+      margin-left: auto;
+    }
+
+    &__mobile-trigger {
+      width: 100%;
+      min-width: 0;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      padding: 7px 10px;
+      color: v.$color-text;
+      border: 0;
+      border-radius: 8px;
+      background: v.$color-surface;
+      text-align: left;
+      cursor: pointer;
+
+      > span {
+        min-width: 0;
+        overflow: hidden;
+        font-size: 13px;
+        font-weight: 750;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      > svg {
+        flex: 0 0 auto;
+        color: v.$color-muted;
+        transition: transform v.$transition;
+      }
+
+      &--open {
+        background: v.$color-primary-soft;
+
+        > svg { transform: rotate(180deg); }
+      }
+    }
+
   }
 
-  &__menu {
-    position: absolute;
-    z-index: 35;
-    top: calc(100% + 8px);
-    right: 0;
-    width: min(285px, calc(100vw - 32px));
-    max-height: 330px;
-    padding: 7px;
-    overflow-y: auto;
-    border: 1px solid v.$color-border;
-    border-radius: v.$radius-md;
-    background: v.$color-surface;
-    box-shadow: 0 16px 46px rgba(31, 37, 28, 0.15);
-    animation: fade-in 120ms ease;
-  }
+    &__menu {
+      position: absolute;
+      z-index: 35;
+      top: calc(100% + 4px);
+      right: 0;
+      left: auto;
+      width: min(280px, calc(100vw - 28px));
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid v.$color-border;
+      border-radius: 8px;
+      background: v.$color-surface;
+      box-shadow: 0 16px 46px rgba(31, 37, 28, 0.15);
+      animation: fade-in 120ms ease;
+
+      &--above {
+        top: auto;
+        bottom: calc(100% + 4px);
+      }
+    }
+
+    &__options {
+      min-height: 0;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 0;
+      margin: 0;
+      padding: 4px 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      list-style: none;
+
+      > li { min-width: 0; flex: 0 0 auto; }
+
+      .ration-tab--compact {
+        height: auto;
+        min-height: 36px;
+        padding: 2px 8px 2px 12px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+
+        &:hover,
+        &.ration-tab--editing { background: v.$color-surface-soft; }
+
+        &.ration-tab--active,
+        &.ration-tab--active:hover {
+          color: v.$color-primary;
+          background: v.$color-primary-soft;
+          box-shadow: none;
+        }
+      }
+
+      .ration-tab__select {
+        min-height: 32px;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.35;
+
+        > span {
+          padding-block: 3px;
+          overflow-wrap: anywhere;
+          white-space: normal;
+        }
+      }
+
+      .ration-tab__input {
+        height: 32px;
+        padding: 0;
+        color: inherit;
+        border: 0;
+        border-radius: 4px;
+        outline: 0;
+        background: transparent;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.35;
+        box-shadow: none;
+      }
+
+      .ration-tab__action {
+        position: relative;
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+        background: transparent;
+
+        &::before {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 22px;
+          height: 22px;
+          border-radius: 5px;
+          content: '';
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+
+        > svg { position: relative; }
+        &:hover { background: transparent; }
+        &:not(:disabled):hover::before { background: rgba(v.$color-primary, 0.08); }
+        &--delete:not(:disabled):hover::before { background: rgba(v.$color-danger, 0.07); }
+      }
+    }
+
+    &__create {
+      min-height: 36px;
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 12px;
+      color: v.$color-primary;
+      border: 0;
+      border-top: 1px solid v.$color-border;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 750;
+      text-align: left;
+      cursor: pointer;
+      transition: background v.$transition;
+
+      &:hover { background: v.$color-surface-soft; }
+    }
 }
 
 .ration-tab {
@@ -696,17 +910,19 @@
   overflow: hidden;
   color: v.$color-muted;
   border: 1px solid v.$color-border;
-  border-radius: 11px;
+  border-radius: 8px;
   background: rgba(v.$color-surface, 0.72);
   transition: color v.$transition, border-color v.$transition, background v.$transition;
 
-  &:hover {
+  &:hover,
+  &--editing {
     color: v.$color-text;
     border-color: #d2d6ce;
-    background: v.$color-surface;
+    background: v.$color-surface-soft;
   }
 
-  &--active {
+  &--active,
+  &--active:hover {
     color: v.$color-primary;
     border-color: rgba(v.$color-primary, 0.38);
     background: v.$color-primary-soft;
@@ -725,8 +941,9 @@
     color: inherit;
     border: 0;
     background: transparent;
-    font-size: 11px;
-    font-weight: 750;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
     cursor: pointer;
 
     span {
@@ -753,20 +970,25 @@
   &__input {
     width: 0;
     min-width: 0;
-    height: 30px;
+    height: 32px;
     flex: 1 1 auto;
-    padding: 0 7px;
-    color: v.$color-text;
-    border: 1px solid rgba(v.$color-primary, 0.4);
-    border-radius: 7px;
+    padding: 0;
+    color: inherit;
+    border: 0;
+    border-radius: 4px;
     outline: 0;
-    background: v.$color-surface;
-    font-size: 11px;
-    font-weight: 700;
-    box-shadow: 0 0 0 3px rgba(v.$color-primary, 0.07);
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
+    box-shadow: none;
+
+    &:focus-visible { outline: 0; }
   }
 
   &__action {
+    position: relative;
     width: 25px;
     height: 30px;
     display: grid;
@@ -779,15 +1001,23 @@
     background: transparent;
     cursor: pointer;
 
-    &:hover {
-      color: v.$color-primary;
-      background: rgba(v.$color-primary, 0.08);
+    &::before {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      content: '';
+      transform: translate(-50%, -50%);
+      pointer-events: none;
     }
 
-    &--delete:hover {
-      color: v.$color-danger;
-      background: rgba(v.$color-danger, 0.07);
-    }
+    > svg { position: relative; }
+    &:hover { color: v.$color-primary; background: transparent; }
+    &:not(:disabled):hover::before { background: rgba(v.$color-primary, 0.08); }
+    &--delete:hover { color: v.$color-danger; }
+    &--delete:not(:disabled):hover::before { background: rgba(v.$color-danger, 0.07); }
 
     &:disabled {
       opacity: 0.25;
@@ -1833,44 +2063,28 @@
   &__actions {
     display: flex;
     flex: 0 0 auto;
-    align-items: flex-end;
+    align-items: center;
     gap: 7px;
   }
 }
 
-.catalog-add {
-  min-width: 104px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0 12px;
-  color: v.$color-primary;
-  border: 1px solid rgba(v.$color-primary, 0.22);
-  border-radius: 9px;
-  background: v.$color-primary-soft;
-  font-size: 11px;
-  font-weight: 750;
-  cursor: pointer;
-
-  &:hover {
-    color: white;
-    background: v.$color-primary;
-  }
-}
-
 .catalog-ration-control {
-  display: flex;
   flex: 0 0 auto;
-  align-items: flex-end;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
 
-  > span {
-    color: v.$color-muted;
-    font-size: 9px;
+  &--filled {
+    padding: 2px;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-sm;
+  }
+
+  > output {
+    min-width: 24px;
+    color: v.$color-text;
+    font-size: 12px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
   }
 }
 
@@ -2010,8 +2224,9 @@
 
   .macro-card {
     grid-column: 1 / -1;
-    grid-template-columns: repeat(4, 1fr);
     min-height: auto;
+
+    &__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 
   .product-table {
@@ -2129,8 +2344,9 @@
 
   .macro-card {
     grid-column: auto;
-    grid-template-columns: repeat(2, 1fr);
-    padding: 19px;
+    padding: 19px 12px 19px 19px;
+
+    &__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   .ration-section {
@@ -2156,18 +2372,21 @@
     min-width: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 11px;
+    gap: 6px;
   }
 
   .product-card {
     @include m.card;
     position: relative;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 2px;
     width: 100%;
     min-width: 0;
     max-width: 100%;
-    padding: 18px;
+    padding: 8px 8px 8px 4px;
     overflow: hidden;
-    border-radius: v.$radius-md;
+    border-radius: 8px;
     background-color: v.$color-surface;
     background-image: linear-gradient(
       135deg,
@@ -2203,89 +2422,138 @@
       }
     }
 
-    &__head {
+    &__drag-handle {
+      width: 20px;
+      height: 100%;
+      min-height: 44px;
+      align-self: stretch;
+    }
+
+    &__content {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(110px, 1.2fr) minmax(88px, 1fr) 70px;
+      align-items: start;
+      gap: 6px;
+    }
+
+    &__main {
+      min-width: 0;
       display: flex;
+      flex-direction: column;
       align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
+      gap: 6px;
+    }
 
-      > div:first-child {
-        display: flex;
-        min-width: 0;
-        flex: 1 1 auto;
-        flex-direction: column;
-
-        > .product-title-line {
-          width: 100%;
-          align-items: flex-start;
-
-          strong {
-            min-width: 0;
-            display: -webkit-box;
-            flex: 1 1 auto;
-            overflow: hidden;
-            overflow-wrap: anywhere;
-            font-size: 15px;
-            line-height: 1.3;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-            white-space: normal;
-          }
-        }
-
-        > span {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          margin-top: 2px;
-          color: v.$color-muted;
-          font-size: 10px;
-        }
-
-        .product-paused {
-          margin: 0;
-          color: v.$color-muted;
-          font-size: 7px;
-        }
-      }
-
-      > .row-actions {
-        flex: 0 0 auto;
-      }
+    &__name {
+      min-width: 0;
+      max-width: 100%;
+      display: -webkit-box;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      color: v.$color-text;
+      font-size: 14px;
+      line-height: 1.35;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
 
     .quantity-control {
-      width: 100%;
-      height: 40px;
-      margin-top: 14px;
+      width: min(100%, 110px);
+      height: 32px;
+      flex: 0 0 auto;
+      margin: 0;
+      border-radius: 8px;
 
-      label { flex: 1; }
+      > button { width: 30px; }
+      label { border-inline: 0; }
+
+      input {
+        width: 4ch;
+        min-width: 0;
+        text-align: center;
+      }
+
+      label > span:last-child { margin-left: 2px; }
     }
 
-    &__stats {
+    &__nutrients {
+      position: relative;
+      width: min(100%, 110px);
+      min-width: 0;
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 13px 16px;
-      margin-top: 16px;
-      padding-top: 14px;
-      border-top: 1px solid v.$color-border;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-self: center;
+      justify-self: center;
+      font-variant-numeric: tabular-nums;
 
-      div {
+      &::before,
+      &::after {
+        position: absolute;
+        background: rgba(v.$color-border, 0.8);
+        content: '';
+        pointer-events: none;
+      }
+
+      &::before { inset: 5px auto 5px 50%; width: 1px; }
+      &::after { inset: 50% 5px auto; height: 1px; }
+
+      > div {
         min-width: 0;
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 3px;
+        padding: 4px 2px;
       }
 
-      span {
-        color: v.$color-muted;
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
+      span { font-size: 11px; font-weight: 650; }
+      strong { min-width: 0; overflow-wrap: anywhere; font-size: 12px; font-weight: 650; }
+    }
 
-      strong {
-        margin-top: 2px;
-        font-size: 12px;
+    &__nutrient-label {
+      &--protein { color: v.$color-protein; }
+      &--fat { color: v.$color-fat; }
+      &--carbs { color: v.$color-carbs; }
+      &--fiber { color: v.$color-fiber; }
+    }
+
+    &__side {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+
+      .row-actions {
+        justify-content: flex-end;
+        gap: 2px;
+
+        button { width: 31px; height: 28px; }
+      }
+    }
+
+    &__totals {
+      max-width: 100%;
+      display: grid;
+      justify-items: end;
+      gap: 1px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+
+      strong { max-width: 100%; overflow-wrap: anywhere; font-size: 13px; }
+      span { color: v.$color-muted; font-size: 11px; }
+    }
+
+    &--dragging {
+      z-index: 2;
+      box-shadow: 0 8px 20px rgba(42, 52, 38, 0.16);
+
+      .product-drag-handle {
+        color: v.$color-primary;
+        background: v.$color-primary-soft;
+        cursor: grabbing;
       }
     }
 
@@ -2295,9 +2563,10 @@
 
       &::before { opacity: 0.22; }
 
-      .product-card__head > div:first-child,
+      .product-card__name,
       .quantity-control,
-      .product-card__stats {
+      .product-card__nutrients,
+      .product-card__totals {
         opacity: 0.42;
       }
 
@@ -2308,6 +2577,24 @@
       .product-paused {
         opacity: 1;
       }
+    }
+  }
+
+  @media (max-width: 380px) {
+    .product-card {
+      grid-template-columns: 16px minmax(0, 1fr);
+      padding-right: 6px;
+
+      &__drag-handle { width: 16px; }
+
+      &__content {
+        grid-template-columns: minmax(100px, 1.2fr) minmax(84px, 1fr) 64px;
+        column-gap: 4px;
+      }
+
+      .quantity-control { width: 100px; }
+      .quantity-control > button { width: 26px; }
+      &__side .row-actions { gap: 0; }
     }
   }
 
@@ -2444,15 +2731,6 @@
     &__actions {
       justify-content: space-between;
     }
-  }
-
-  .catalog-add {
-    width: 100%;
-  }
-
-  .catalog-ration-control {
-    flex: 1;
-    align-items: stretch;
   }
 
   .form-grid--nutrition {

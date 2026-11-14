@@ -27,15 +27,6 @@ type OverlayState =
   | { type: 'export' }
   | { type: 'product'; product: Product | null }
 
-const productWord = (count: number) => {
-  const lastTwo = count % 100
-  const last = count % 10
-  if (lastTwo >= 11 && lastTwo <= 19) return 'продуктов'
-  if (last === 1) return 'продукт'
-  if (last >= 2 && last <= 4) return 'продукта'
-  return 'продуктов'
-}
-
 export function App() {
   const {
     products,
@@ -196,6 +187,17 @@ export function App() {
     updateActiveRationEntries((current) => current.filter((entry) => entry.id !== entryId))
   }
 
+  const removeOneFromRation = (productId: string) => {
+    updateActiveRationEntries((current) => {
+      for (let index = current.length - 1; index >= 0; index--) {
+        if (current[index].productId === productId) {
+          return current.filter((_, entryIndex) => entryIndex !== index)
+        }
+      }
+      return current
+    })
+  }
+
   const updateRationAmount = (entryId: string, amount: number) => {
     updateActiveRationEntries((current) => current.map((entry) => (
       entry.id === entryId ? { ...entry, amount } : entry
@@ -288,19 +290,17 @@ export function App() {
         <section className="ration-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">Состав</span>
-              <h2>Дневной набор продуктов</h2>
+              <h2>План</h2>
               <p>v1.0</p>
             </div>
-            <div className="section-heading__actions">
-              <div className="section-heading__count">
-                {rationItems.length} {productWord(rationItems.length)}
+            {rationItems.length > 0 && (
+              <div className="section-heading__actions">
+                <button className="button button--ghost" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
+                  <Icon name="plus" size={17} />
+                  <span>Добавить продукт</span>
+                </button>
               </div>
-              <button className="button button--primary" type="button" onClick={() => setOverlay({ type: 'catalog' })}>
-                <Icon name="plus" size={17} />
-                <span>Добавить</span>
-              </button>
-            </div>
+            )}
           </div>
           <RationTabs
             tabs={rationTabs}
@@ -323,23 +323,13 @@ export function App() {
         </section>
       </main>
 
-      <footer className="footer container">
-        <span>{user
-          ? syncState.phase === 'conflict'
-            ? 'Синхронизация приостановлена до выбора версии'
-            : syncState.phase === 'offline'
-              ? 'Изменения сохраняются локально до подключения'
-              : 'Данные синхронизируются с аккаунтом Google'
-          : 'Данные хранятся только на этом устройстве'}</span>
-        <span>Расчёт носит информационный характер</span>
-      </footer>
-
       {overlay.type === 'catalog' && (
         <CatalogModal
           products={products}
           rationProductCounts={rationProductCounts}
           notice={catalogNotice}
           onAddToRation={addToRation}
+          onRemoveFromRation={removeOneFromRation}
           onCreate={() => setOverlay({ type: 'product', product: null })}
           onImport={() => setOverlay({ type: 'import' })}
           onEdit={(product) => setOverlay({ type: 'product', product })}

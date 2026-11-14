@@ -139,6 +139,93 @@ function SortableProductRow({
   )
 }
 
+function SortableProductCard({
+  entryId,
+  product,
+  amount,
+  isHidden,
+  onAmountChange,
+  onToggleVisibility,
+  onRemove,
+}: Omit<SortableProductRowProps, 'onEdit'>) {
+  const {
+    attributes,
+    listeners,
+    setActivatorNodeRef,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: entryId })
+  const factor = amount / 100
+  const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
+  const nutrientHighlight = getNutrientHighlight(product, amount)
+  const className = [
+    'product-card',
+    isHidden ? 'product-card--hidden' : '',
+    isDragging ? 'product-card--dragging' : '',
+  ].filter(Boolean).join(' ')
+
+  return (
+    <article
+      ref={setNodeRef}
+      className={className}
+      data-dominant-nutrient={nutrientHighlight
+        ? [nutrientHighlight.nutrient, nutrientHighlight.secondaryNutrient].filter(Boolean).join('+')
+        : undefined}
+      style={{
+        ...nutrientHighlight?.style,
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+    >
+      <button
+        ref={setActivatorNodeRef}
+        className="product-drag-handle product-card__drag-handle"
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label={`Изменить порядок продукта «${product.name}»`}
+      >
+        <Icon name="grip-vertical" size={17} />
+      </button>
+      <div className="product-card__content">
+        <div className="product-card__main">
+          <strong className="product-card__name" title={product.name}>{product.name}</strong>
+          <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(entryId, value)} />
+          {isHidden && <span className="product-paused">Не учитывается</span>}
+        </div>
+        <div className="product-card__nutrients" aria-label="Нутриенты в порции, граммы">
+          <div><span className="product-card__nutrient-label--protein" aria-label="Белки">Б</span><strong>{formatNumber(product.protein * factor, 1)}</strong></div>
+          <div><span className="product-card__nutrient-label--fat" aria-label="Жиры">Ж</span><strong>{formatNumber(product.fat * factor, 1)}</strong></div>
+          <div><span className="product-card__nutrient-label--carbs" aria-label="Углеводы">У</span><strong>{formatNumber(product.carbs * factor, 1)}</strong></div>
+          <div><span className="product-card__nutrient-label--fiber" aria-label="Клетчатка">Кл</span><strong>{formatNumber(product.fiber * factor, 1)}</strong></div>
+        </div>
+        <div className="product-card__side">
+          <div className="row-actions">
+            <button
+              className="row-actions__visibility"
+              type="button"
+              onClick={() => onToggleVisibility(entryId)}
+              aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
+              aria-pressed={isHidden}
+            >
+              <Icon name={isHidden ? 'eye-off' : 'eye'} size={17} />
+            </button>
+            <button className="row-actions__danger" type="button" onClick={() => onRemove(entryId)} aria-label={`Убрать ${product.name} из рациона`}>
+              <Icon name="close" size={17} />
+            </button>
+          </div>
+          <div className="product-card__totals">
+            <strong>{formatMoney(cost)}</strong>
+            <span>{formatNumber(product.calories * factor)} ккал</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
+
 export function ProductList({
   items,
   onAmountChange,
@@ -176,11 +263,11 @@ export function ProductList({
     return (
       <div className="empty-state">
         <div className="empty-state__icon"><Icon name="leaf" size={30} /></div>
-        <h3>Рацион пока пуст</h3>
-        <p>Выберите продукты из каталога, чтобы начать расчёт.</p>
+        <h3>Тут пока пусто</h3>
+        <p>Добавьте продукты из каталога</p>
         <button className="button button--primary" type="button" onClick={onOpenCatalog}>
           <Icon name="plus" size={17} />
-          Открыть каталог
+          Добавить
         </button>
       </div>
     )
@@ -239,59 +326,29 @@ export function ProductList({
         </div>
       </DndContext>
 
-      <div className="product-cards">
-        {items.map(({ entry, product }) => {
-          const amount = entry.amount
-          const isHidden = !entry.enabled
-          const factor = amount / 100
-          const cost = product.packageWeight ? (product.packagePrice / product.packageWeight) * amount : 0
-          const nutrientHighlight = getNutrientHighlight(product, amount)
-          return (
-            <article
-              className={`product-card ${isHidden ? 'product-card--hidden' : ''}`}
-              data-dominant-nutrient={nutrientHighlight
-                ? [nutrientHighlight.nutrient, nutrientHighlight.secondaryNutrient].filter(Boolean).join('+')
-                : undefined}
-              key={entry.id}
-              style={nutrientHighlight?.style}
-            >
-              <div className="product-card__head">
-                <div>
-                  <div className="product-title-line">
-                    <strong>{product.name}</strong>
-                    {isHidden && <span className="product-paused">Не учитывается</span>}
-                  </div>
-                  <span>{formatMoney(product.packagePrice)} за {product.packageWeight} г</span>
-                </div>
-                <div className="row-actions">
-                  <button
-                    className="row-actions__visibility"
-                    type="button"
-                    onClick={() => onToggleVisibility(entry.id)}
-                    aria-label={isHidden ? `Учитывать ${product.name} в расчётах` : `Не учитывать ${product.name} в расчётах`}
-                    aria-pressed={isHidden}
-                  >
-                    <Icon name={isHidden ? 'eye-off' : 'eye'} size={17} />
-                  </button>
-                  <button type="button" onClick={() => onEdit(product)} aria-label={`Редактировать ${product.name}`}>
-                    <Icon name="edit" size={17} />
-                  </button>
-                  <button className="row-actions__danger" type="button" onClick={() => onRemove(entry.id)} aria-label={`Убрать ${product.name} из рациона`}>
-                    <Icon name="close" size={17} />
-                  </button>
-                </div>
-              </div>
-              <QuantityControl value={amount} label={product.name} onChange={(value) => onAmountChange(entry.id, value)} />
-              <div className="product-card__stats">
-                <div><span>Б / Ж / У</span><strong>{formatNumber(product.protein * factor, 1)} / {formatNumber(product.fat * factor, 1)} / {formatNumber(product.carbs * factor, 1)}</strong></div>
-                <div><span>Клетчатка</span><strong>{formatNumber(product.fiber * factor, 1)} г</strong></div>
-                <div><span>Калории</span><strong>{formatNumber(product.calories * factor)} ккал</strong></div>
-                <div><span>Стоимость</span><strong>{formatMoney(cost)}</strong></div>
-              </div>
-            </article>
-          )
-        })}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis]}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={items.map(({ entry }) => entry.id)} strategy={verticalListSortingStrategy}>
+          <div className="product-cards">
+            {items.map(({ entry, product }) => (
+              <SortableProductCard
+                key={entry.id}
+                entryId={entry.id}
+                product={product}
+                amount={entry.amount}
+                isHidden={!entry.enabled}
+                onAmountChange={onAmountChange}
+                onToggleVisibility={onToggleVisibility}
+                onRemove={onRemove}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-type IconName = 'plus' | 'edit' | 'trash' | 'close' | 'minus' | 'leaf' | 'wallet' | 'eye' | 'eye-off' | 'grip-vertical' | 'settings' | 'database' | 'file-text' | 'download' | 'cloud' | 'refresh' | 'chevron-down'
+type IconName = 'plus' | 'edit' | 'trash' | 'close' | 'check' | 'minus' | 'leaf' | 'wallet' | 'eye' | 'eye-off' | 'grip-vertical' | 'settings' | 'database' | 'file-text' | 'download' | 'cloud' | 'refresh' | 'chevron-down'
 
 type IconProps = {
   name: IconName
@@ -11,6 +11,7 @@ const paths: Record<IconName, React.ReactNode> = {
   edit: <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" />,
   trash: <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 4v6m4-6v6" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
+  check: <path d="m5 12 4 4L19 6" />,
   leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 19 2 19 2c.6 9.2-3.4 14.3-8 14.8M2 21c3-6 7-9 13-12" />,
   wallet: <path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v12H5a3 3 0 0 1-3-3V6m14 8h.01" />,
   settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" /></>,

@@ -8,6 +8,7 @@ type CatalogModalProps = {
   rationProductCounts: Map<string, number>
   notice?: string
   onAddToRation: (productId: string) => void
+  onRemoveFromRation: (productId: string) => void
   onCreate: () => void
   onImport: () => void
   onEdit: (product: Product) => void
@@ -20,6 +21,7 @@ export function CatalogModal({
   rationProductCounts,
   notice,
   onAddToRation,
+  onRemoveFromRation,
   onCreate,
   onImport,
   onEdit,
@@ -51,9 +53,7 @@ export function CatalogModal({
       <section className="modal catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
         <div className="modal__head catalog-modal__head">
           <div>
-            <span className="eyebrow">Ваши продукты</span>
-            <h2 id="catalog-title">Каталог продуктов</h2>
-            <p>Добавляйте продукты в типичный день или управляйте каталогом.</p>
+            <h2 id="catalog-title">Каталог</h2>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Закрыть каталог">
             <Icon name="close" size={21} />
@@ -66,7 +66,7 @@ export function CatalogModal({
             <input
               type="search"
               value={query}
-              placeholder="Найти продукт"
+              placeholder="Поиск"
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
@@ -94,16 +94,27 @@ export function CatalogModal({
                   <small>{formatMoney(product.packagePrice)} за {product.packageWeight} г</small>
                 </div>
                 <div className="catalog-item__actions">
-                  <div className="catalog-ration-control">
-                    {rationCount > 0 && <span>Добавлено: {rationCount}</span>}
+                  <div className={`row-actions catalog-ration-control${rationCount > 0 ? ' catalog-ration-control--filled' : ''}`}>
+                    {rationCount > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onRemoveFromRation(product.id)}
+                          aria-label={`Убрать одну позицию «${product.name}» из набора`}
+                        >
+                          <Icon name="minus" size={17} />
+                        </button>
+                        <output aria-label={`Количество позиций «${product.name}» в наборе`}>
+                          {rationCount}
+                        </output>
+                      </>
+                    )}
                     <button
-                      className="catalog-add"
                       type="button"
                       onClick={() => onAddToRation(product.id)}
                       aria-label={rationCount > 0 ? `Добавить ещё один ${product.name} в рацион` : `Добавить ${product.name} в рацион`}
                     >
-                      <Icon name="plus" size={15} />
-                      {rationCount > 0 ? 'Добавить ещё' : 'В рацион'}
+                      <Icon name="plus" size={17} />
                     </button>
                   </div>
                   <div className="row-actions">
