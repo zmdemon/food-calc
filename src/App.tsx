@@ -323,6 +323,8 @@ export function App() {
         </section>
       </main>
 
+      <footer className="footer" aria-hidden="true" />
+
       {overlay.type === 'catalog' && (
         <CatalogModal
           products={products}

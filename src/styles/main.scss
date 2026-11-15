@@ -1413,11 +1413,7 @@
 }
 
 .footer {
-  display: flex;
-  justify-content: space-between;
-  padding-block: 38px 30px;
-  color: #92978e;
-  font-size: 10px;
+  height: 64px;
 }
 
 .modal-backdrop {
@@ -2599,8 +2595,7 @@
   }
 
   .footer {
-    flex-direction: column;
-    gap: 4px;
+    height: calc(48px + env(safe-area-inset-bottom, 0px));
   }
 
   .modal-backdrop {
